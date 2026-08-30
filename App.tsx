@@ -1,8 +1,14 @@
 import React from 'react';
-import { View, Text, FlatList, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StatusBar, Pressable } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 
-const MOCK_GRID_DATA = [
+type GridItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+};
+
+const MOCK_GRID_DATA: GridItem[] = [
   { id: '1', title: "PORvaNo Plat'e", subtitle: 'Кравц' },
   { id: '2', title: 'Jah Khalib - С...', subtitle: 'Сжигая дотла' },
   { id: '3', title: 'Dikiy jad', subtitle: 'Mrid' },
@@ -15,8 +21,8 @@ const MOCK_GRID_DATA = [
 ];
 
 export default function App() {
-  const renderGridItem = ({ item }: { item: (typeof MOCK_GRID_DATA)[0] }) => (
-    <TouchableOpacity className="w-[31%] mb-4" activeOpacity={0.7}>
+  const renderGridItem = ({ item }: { item: GridItem }) => (
+    <Pressable className="w-[31%] mb-4 active:opacity-70">
       <View className="w-full aspect-square bg-[#282828] rounded-md mb-1.5" />
       <Text className="text-white text-[13px] font-semibold" numberOfLines={1}>
         {item.title}
@@ -24,7 +30,7 @@ export default function App() {
       <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>
         {item.subtitle}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (
@@ -33,18 +39,18 @@ export default function App() {
         <StatusBar barStyle="light-content" />
 
         {/* 1. HEADER */}
-        <View className="flex-row justify-between items-center px-4 py-3">
+        <View className="flex-row items-center justify-between px-4 py-3">
           <View className="flex-row items-center">
-            <View className="w-7 h-7 rounded-full bg-red-600 justify-center items-center mr-2">
-              <Text className="text-white text-xs ml-0.5">▶</Text>
+            <View className="items-center justify-center mr-2 bg-red-600 rounded-full w-7 h-7">
+              <Text className="ml-0.5 text-xs text-white">▶</Text>
             </View>
-            <Text className="text-white text-2xl font-bold tracking-tight">
+            <Text className="text-2xl font-bold tracking-tight text-white">
               Music
             </Text>
           </View>
-          <TouchableOpacity className="w-8 h-8 rounded-full bg-[#444444] justify-center items-center">
-            <Text className="text-white font-bold text-sm">Ю</Text>
-          </TouchableOpacity>
+          <Pressable className="w-8 h-8 rounded-full bg-[#444444] justify-center items-center active:bg-gray-600">
+            <Text className="text-sm font-bold text-white">Ю</Text>
+          </Pressable>
         </View>
 
         {/* 2. MAIN CONTENT (Сітка 3x3) */}
@@ -59,41 +65,43 @@ export default function App() {
         />
 
         {/* 3. MINI PLAYER */}
-        <TouchableOpacity
-          className="flex-row items-center justify-between bg-[#212121] px-4 py-2 mx-2 mb-2 rounded-lg"
-          activeOpacity={0.9}
-        >
+        {/* Замість прозорості, міні-плеєр тепер трохи світлішає при натисканні */}
+        <Pressable className="flex-row items-center justify-between bg-[#212121] px-4 py-2 mx-2 mb-2 rounded-lg active:bg-[#333333]">
           <View className="flex-row items-center">
             <View className="w-10 h-10 bg-[#444444] rounded mr-3" />
             <View>
-              <Text className="text-white text-sm font-semibold">
+              <Text className="text-sm font-semibold text-white">
                 Гостиница Космос
               </Text>
               <Text className="text-[#AAAAAA] text-xs">E Mnogoznaal</Text>
             </View>
           </View>
           <View className="flex-row items-center space-x-4">
-            <Text className="text-lg text-white">📺</Text>
-            <Text className="text-lg text-white mr-2">▶</Text>
+            <Pressable className="active:opacity-50">
+              <Text className="text-lg text-white">📺</Text>
+            </Pressable>
+            <Pressable className="active:opacity-50">
+              <Text className="mr-2 text-lg text-white">▶</Text>
+            </Pressable>
           </View>
-        </TouchableOpacity>
+        </Pressable>
 
         {/* 4. BOTTOM NAVIGATION */}
         <View className="flex-row bg-black py-3 border-t border-[#222222]">
-          <TouchableOpacity className="flex-1 items-center justify-center">
-            <Text className="text-xl text-white mb-1">🏠</Text>
+          <Pressable className="items-center justify-center flex-1 active:opacity-50">
+            <Text className="mb-1 text-xl text-white">🏠</Text>
             <Text className="text-white text-[10px] font-bold mt-1">Головна</Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity className="flex-1 items-center justify-center">
+          <Pressable className="items-center justify-center flex-1 active:opacity-50">
             <Text className="text-xl text-[#AAAAAA] mb-1">🔍</Text>
             <Text className="text-[#AAAAAA] text-[10px] mt-1">Пошук</Text>
-          </TouchableOpacity>
+          </Pressable>
 
-          <TouchableOpacity className="flex-1 items-center justify-center">
+          <Pressable className="items-center justify-center flex-1 active:opacity-50">
             <Text className="text-xl text-[#AAAAAA] mb-1">📚</Text>
             <Text className="text-[#AAAAAA] text-[10px] mt-1">Бібліотека</Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
