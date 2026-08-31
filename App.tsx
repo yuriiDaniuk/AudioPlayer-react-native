@@ -2,6 +2,11 @@ import React from 'react';
 import { View, Text, FlatList, StatusBar, Pressable } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 
+import PlayIcon from './src/assets/icons/play.svg';
+import HomeIcon from './src/assets/icons/home.svg';
+import SearchIcon from './src/assets/icons/search.svg';
+import LibraryIcon from './src/assets/icons/library.svg';
+
 type GridItem = {
   id: string;
   title: string;
@@ -56,7 +61,7 @@ export default function App() {
         {/* 2. MAIN CONTENT (Сітка 3x3) */}
         <FlatList
           data={MOCK_GRID_DATA}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           renderItem={renderGridItem}
           numColumns={3}
           contentContainerClassName="px-4 pt-4 pb-5 flex-grow"
@@ -80,8 +85,8 @@ export default function App() {
             <Pressable className="active:opacity-50">
               <Text className="text-lg text-white">📺</Text>
             </Pressable>
-            <Pressable className="active:opacity-50">
-              <Text className="mr-2 text-lg text-white">▶</Text>
+            <Pressable className="items-center justify-center w-8 h-8 active:opacity-50">
+              <PlayIcon width={24} height={24} fill="white" color="white" />
             </Pressable>
           </View>
         </Pressable>
@@ -89,17 +94,25 @@ export default function App() {
         {/* 4. BOTTOM NAVIGATION */}
         <View className="flex-row bg-black py-3 border-t border-[#222222]">
           <Pressable className="items-center justify-center flex-1 active:opacity-50">
-            <Text className="mb-1 text-xl text-white">🏠</Text>
-            <Text className="text-white text-[10px] font-bold mt-1">Головна</Text>
+            <Pressable className="items-center justify-center w-8 h-8 active:opacity-50">
+              <HomeIcon width={24} height={24} fill="white" color="white" />
+            </Pressable>
+            <Text className="text-white text-[10px] font-bold mt-1">
+              Головна
+            </Text>
           </Pressable>
 
           <Pressable className="items-center justify-center flex-1 active:opacity-50">
-            <Text className="text-xl text-[#AAAAAA] mb-1">🔍</Text>
+            <Pressable className="items-center justify-center w-8 h-8 active:opacity-50">
+              <SearchIcon width={24} height={24} color="white" />
+            </Pressable>
             <Text className="text-[#AAAAAA] text-[10px] mt-1">Пошук</Text>
           </Pressable>
 
           <Pressable className="items-center justify-center flex-1 active:opacity-50">
-            <Text className="text-xl text-[#AAAAAA] mb-1">📚</Text>
+            <Pressable className="items-center justify-center w-8 h-8 active:opacity-50">
+              <LibraryIcon width={24} height={24} color="white" />
+            </Pressable>
             <Text className="text-[#AAAAAA] text-[10px] mt-1">Бібліотека</Text>
           </Pressable>
         </View>
