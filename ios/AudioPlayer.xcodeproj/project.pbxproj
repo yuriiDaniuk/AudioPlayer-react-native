@@ -14,7 +14,6 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8896B2F89A874F178FE9341B /* Inter_18pt-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = F66846653A874CE59C664D13 /* Inter_18pt-SemiBold.ttf */; };
 		962AF5F59C434C1497001649 /* Inter_18pt-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C9C3C223FA81494D8550BEBD /* Inter_18pt-Regular.ttf */; };
-		EFD05EDFF6E64B71A25774EC /* Lusitana-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 12DABDE265074FF0B1745D19 /* Lusitana-Regular.ttf */; };
 		FA351ED457BE405DADB9BAB6 /* Inter_18pt-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6EF668C94B66457C96278F86 /* Inter_18pt-Bold.ttf */; };
 /* End PBXBuildFile section */
 
@@ -200,7 +199,6 @@
 				FA351ED457BE405DADB9BAB6 /* Inter_18pt-Bold.ttf in Resources */,
 				8896B2F89A874F178FE9341B /* Inter_18pt-SemiBold.ttf in Resources */,
 				962AF5F59C434C1497001649 /* Inter_18pt-Regular.ttf in Resources */,
-				EFD05EDFF6E64B71A25774EC /* Lusitana-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
