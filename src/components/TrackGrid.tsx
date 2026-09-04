@@ -1,81 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  Image,
-  ActivityIndicator,
-} from 'react-native';
-import axios from 'axios';
-
-type Artist = {
-  id: string;
-  name: string;
-};
-
-type Track = {
-  id: string;
-  title: string;
-  coverUrl: string;
-  artist: Artist;
-};
+import React, { useEffect } from 'react';
+import { View, Text, FlatList, Pressable, Image, ActivityIndicator } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchTracks, Track } from '../store/tracksSlice';
+import { AppDispatch, RootState } from '../store'; // Імпортуємо типізований Dispatch
+import { setActiveTrack } from '../store/playerSlice'; // Екшен для увімкнення треку
 
 export default function TrackGrid() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Використовуємо типізований dispatch
+  const dispatch = useDispatch<AppDispatch>();
+  
+  // Дістаємо треки та статус завантаження з глобального стейту
+  const { items: tracks, status } = useSelector((state: RootState) => state.tracks);
 
   useEffect(() => {
-    const fetchTracks = async () => {
-      try {
-        const response = await axios.get<Track[]>(
-          'http://localhost:3000/api/tracks',
-        );
+    // Якщо ми ще не завантажували треки — робимо запит
+    if (status === 'idle') {
+      dispatch(fetchTracks());
+    }
+  }, [status, dispatch]);
 
-        setTracks(response.data);
-      } catch (error) {
-        console.error('Помилка завантаження треків:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTracks();
-  }, []);
+  const handleTrackPress = (track: Track) => {
+    // Передаємо обраний трек у глобальний стейт плеєра!
+    dispatch(setActiveTrack(track));
+  };
 
   const renderGridItem = ({ item }: { item: Track }) => {
-    const hasValidUrl =
-      item.coverUrl &&
-      typeof item.coverUrl === 'string' &&
-      item.coverUrl.trim().length > 0;
-
+    const hasValidUrl = item.coverUrl && typeof item.coverUrl === 'string' && item.coverUrl.trim().length > 0;
     const cleanUri = hasValidUrl ? encodeURI(item.coverUrl.trim()) : null;
 
     return (
-      <Pressable className="w-[31%] mb-4 active:opacity-70">
+      // Додали обробник натискання:
+      <Pressable onPress={() => handleTrackPress(item)} className="w-[31%] mb-4 active:opacity-70">
         {cleanUri ? (
-          <Image
-            source={{ uri: cleanUri }}
-            className="w-full aspect-square rounded-md mb-1.5 bg-[#282828]"
-          />
+          <Image source={{ uri: cleanUri }} className="w-full aspect-square rounded-md mb-1.5 bg-[#282828]" />
         ) : (
           <View className="w-full aspect-square bg-[#282828] rounded-md mb-1.5" />
         )}
-
-        <Text
-          className="text-white text-[13px] font-semibold"
-          numberOfLines={1}
-        >
-          {item.title}
-        </Text>
-        <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>
-          {item.artist.name}
-        </Text>
+        <Text className="text-white text-[13px] font-semibold" numberOfLines={1}>{item.title}</Text>
+        <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>{item.artist.name}</Text>
       </Pressable>
     );
   };
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <View className="items-center justify-center flex-1 pt-10">
         <ActivityIndicator size="large" color="#ffffff" />

@@ -8,31 +8,36 @@ import TrackGrid from './src/components/TrackGrid';
 import MiniPlayer from './src/components/MiniPlayer';
 import BottomNav from './src/components/BottomNav';
 
+import { Provider } from 'react-redux';
+import { store } from './src/store';
+
 // Створюємо "всеїдний" StatusBar, який ігнорує суворі типи
 const StatusBar = RNStatusBar as any;
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <LinearGradient
-        colors={['#062329', '#020d10', '#000000']}
-        locations={[0, 0.35, 0.7]}
-        style={{ flex: 1 }}
-      >
-        <SafeAreaView className="flex-1 bg-transparent">
-          
-          <StatusBar 
-            barStyle="light-content" 
-            {...(Platform.OS === 'android' ? { translucent: true, backgroundColor: 'transparent' } : {})}
-          />
-          
-          <Header />
-          <TrackGrid />
-          <MiniPlayer />
-          <BottomNav />
-          
-        </SafeAreaView>
-      </LinearGradient>
-    </SafeAreaProvider>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <LinearGradient
+          colors={['#062329', '#020d10', '#000000']}
+          locations={[0, 0.35, 0.7]}
+          style={{ flex: 1 }}
+        >
+          <SafeAreaView className="flex-1 bg-transparent">
+            <StatusBar
+              barStyle="light-content"
+              {...(Platform.OS === 'android'
+                ? { translucent: true, backgroundColor: 'transparent' }
+                : {})}
+            />
+
+            <Header />
+            <TrackGrid />
+            <MiniPlayer />
+            <BottomNav />
+          </SafeAreaView>
+        </LinearGradient>
+      </SafeAreaProvider>
+    </Provider>
   );
 }
