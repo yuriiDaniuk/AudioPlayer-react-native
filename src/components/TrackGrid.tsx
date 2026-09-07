@@ -1,16 +1,26 @@
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, Pressable, Image, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchTracks, Track } from '../store/tracksSlice';
 import { AppDispatch, RootState } from '../store'; // Імпортуємо типізований Dispatch
-import { setActiveTrack } from '../store/playerSlice'; // Екшен для увімкнення треку
+import { setActiveTrack, setIsPlaying } from '../store/playerSlice'; // Екшен для увімкнення треку
+import TrackPlayer from 'react-native-track-player';
 
 export default function TrackGrid() {
   // Використовуємо типізований dispatch
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Дістаємо треки та статус завантаження з глобального стейту
-  const { items: tracks, status } = useSelector((state: RootState) => state.tracks);
+  const { items: tracks, status } = useSelector(
+    (state: RootState) => state.tracks,
+  );
 
   useEffect(() => {
     // Якщо ми ще не завантажували треки — робимо запит
@@ -19,25 +29,53 @@ export default function TrackGrid() {
     }
   }, [status, dispatch]);
 
-  const handleTrackPress = (track: Track) => {
-    // Передаємо обраний трек у глобальний стейт плеєра!
+  const handleTrackPress = async (track: Track) => {
+    // 1. Оновлюємо UI (міні-плеєр з'явиться)
     dispatch(setActiveTrack(track));
+    dispatch(setIsPlaying(true));
+
+    // 2. Передаємо дані в аудіо-рушій і запускаємо
+    await TrackPlayer.reset(); // Очищаємо попередній трек
+    await TrackPlayer.add({
+      id: track.id,
+      url: track.audioUrl, // URL самого аудіофайлу
+      title: track.title,
+      artist: track.artist.name,
+      artwork: track.coverUrl, // Для обкладинки на екрані блокування
+    });
+    await TrackPlayer.play();
   };
 
   const renderGridItem = ({ item }: { item: Track }) => {
-    const hasValidUrl = item.coverUrl && typeof item.coverUrl === 'string' && item.coverUrl.trim().length > 0;
+    const hasValidUrl =
+      item.coverUrl &&
+      typeof item.coverUrl === 'string' &&
+      item.coverUrl.trim().length > 0;
     const cleanUri = hasValidUrl ? encodeURI(item.coverUrl.trim()) : null;
 
     return (
       // Додали обробник натискання:
-      <Pressable onPress={() => handleTrackPress(item)} className="w-[31%] mb-4 active:opacity-70">
+      <Pressable
+        onPress={() => handleTrackPress(item)}
+        className="w-[31%] mb-4 active:opacity-70"
+      >
         {cleanUri ? (
-          <Image source={{ uri: cleanUri }} className="w-full aspect-square rounded-md mb-1.5 bg-[#282828]" />
+          <Image
+            source={{ uri: cleanUri }}
+            className="w-full aspect-square rounded-md mb-1.5 bg-[#282828]"
+          />
         ) : (
           <View className="w-full aspect-square bg-[#282828] rounded-md mb-1.5" />
         )}
-        <Text className="text-white text-[13px] font-semibold" numberOfLines={1}>{item.title}</Text>
-        <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>{item.artist.name}</Text>
+        <Text
+          className="text-white text-[13px] font-semibold"
+          numberOfLines={1}
+        >
+          {item.title}
+        </Text>
+        <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>
+          {item.artist.name}
+        </Text>
       </Pressable>
     );
   };

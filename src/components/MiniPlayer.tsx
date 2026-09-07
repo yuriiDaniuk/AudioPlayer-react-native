@@ -5,6 +5,7 @@ import { View, Text, Image, Pressable } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { setIsPlaying } from '../store/playerSlice';
+import TrackPlayer from 'react-native-track-player';
 
 export default function MiniPlayer() {
   const dispatch = useDispatch();
@@ -20,7 +21,13 @@ export default function MiniPlayer() {
   }
 
   // 3. Обробник для кнопки Play/Pause
-  const togglePlayPause = () => {
+  const togglePlayPause = async () => {
+    if (isPlaying) {
+      await TrackPlayer.pause();
+    } else {
+      await TrackPlayer.play();
+    }
+    // Оновлюємо іконку в UI
     dispatch(setIsPlaying(!isPlaying));
   };
 
@@ -54,15 +61,13 @@ export default function MiniPlayer() {
       {/* Кнопка Play/Pause */}
       <Pressable
         onPress={togglePlayPause}
-        className="px-4 py-2 active:opacity-70"
+        className="flex items-center justify-center px-4 py-2 active:opacity-70"
       >
-        <Text className="text-lg text-white">
-          {isPlaying ? (
-            <PlayIcon width={24} height={24} color="white" />
-          ) : (
-            <PauseIcon width={24} height={24} color="white" />
-          )}
-        </Text>
+        {isPlaying ? (
+          <PauseIcon width={24} height={24} color="white" />
+        ) : (
+          <PlayIcon width={24} height={24} color="white" />
+        )}
       </Pressable>
     </View>
   );

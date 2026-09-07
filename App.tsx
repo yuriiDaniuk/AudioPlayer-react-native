@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Platform, StatusBar as RNStatusBar } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -11,10 +11,24 @@ import BottomNav from './src/components/BottomNav';
 import { Provider } from 'react-redux';
 import { store } from './src/store';
 
+import TrackPlayer from 'react-native-track-player';
+
 // Створюємо "всеїдний" StatusBar, який ігнорує суворі типи
 const StatusBar = RNStatusBar as any;
 
 export default function App() {
+  useEffect(() => {
+    async function setupPlayer() {
+      try {
+        await TrackPlayer.setupPlayer();
+        console.log('✅ Плеєр успішно ініціалізовано');
+      } catch (e) {
+        console.log('Помилка ініціалізації плеєра:', e);
+      }
+    }
+    setupPlayer();
+  }, []);
+
   return (
     <Provider store={store}>
       <SafeAreaProvider>
