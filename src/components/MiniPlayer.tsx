@@ -4,7 +4,7 @@ import React, {useState} from 'react';
 import { View, Text, Image, Pressable, GestureResponderEvent } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { setIsPlaying } from '../store/playerSlice';
+import { setIsPlaying, setFullPlayerOpen} from '../store/playerSlice';
 import TrackPlayer, { useProgress } from 'react-native-track-player';
 
 export default function MiniPlayer() {
@@ -62,7 +62,10 @@ export default function MiniPlayer() {
   const progressPercentage = duration > 0 ? (position / duration) * 100 : 0;
 
   return (
-    <View className="flex-row items-center bg-[#282828] p-2 mx-4 mb-4 rounded-md overflow-hidden relative">
+    <Pressable 
+      onPress={() => dispatch(setFullPlayerOpen(true))}
+      className="flex-row items-center bg-[#282828] p-2 mx-4 mb-4 rounded-md overflow-hidden relative active:opacity-95"
+    >
       {/* Обкладинка */}
       {cleanUri ? (
         <Image
@@ -85,7 +88,10 @@ export default function MiniPlayer() {
 
       {/* Кнопка Play/Pause */}
       <Pressable
-        onPress={togglePlayPause}
+        onPress={(event) => {
+          event.stopPropagation();
+          togglePlayPause().catch(console.error);
+        }}
         className="flex items-center justify-center px-4 py-2 active:opacity-70"
       >
         {isPlaying ? (
@@ -99,7 +105,10 @@ export default function MiniPlayer() {
       <Pressable 
         // onLayout спрацьовує при рендері і передає нам реальну ширину елемента
         onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
-        onPress={handleSeek}
+        onPress={(event) => {
+          event.stopPropagation();
+          handleSeek(event).catch(console.error);
+        }}
         // Робимо зону натискання вищою (h-4 = 16px), але притискаємо контент до низу (justify-end)
         className="absolute bottom-0 left-0 right-0 justify-end h-4"
       >
@@ -110,6 +119,6 @@ export default function MiniPlayer() {
           />
         </View>
       </Pressable>
-    </View>
+    </Pressable>
   );
 }

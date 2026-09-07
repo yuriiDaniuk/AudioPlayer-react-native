@@ -12,6 +12,8 @@ import { Provider } from 'react-redux';
 import { store } from './src/store';
 
 import TrackPlayer from 'react-native-track-player';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import PlayerBottomSheet from './src/components/PlayerBottomSheet';
 
 // Створюємо "всеїдний" StatusBar, який ігнорує суворі типи
 const StatusBar = RNStatusBar as any;
@@ -30,28 +32,35 @@ export default function App() {
   }, []);
 
   return (
-    <Provider store={store}>
-      <SafeAreaProvider>
-        <LinearGradient
-          colors={['#062329', '#020d10', '#000000']}
-          locations={[0, 0.35, 0.7]}
-          style={{ flex: 1 }}
-        >
-          <SafeAreaView className="flex-1 bg-transparent">
-            <StatusBar
-              barStyle="light-content"
-              {...(Platform.OS === 'android'
-                ? { translucent: true, backgroundColor: 'transparent' }
-                : {})}
-            />
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#121212' }}>
+      <Provider store={store}>
+        {/* 1. ДОДАНО: style={{ flex: 1 }} для SafeAreaProvider */}
+        <SafeAreaProvider style={{ flex: 1 }}>
+          
+          {/* 2. ЗАМІНЕНО: className="flex-1" на надійний style={{ flex: 1 }} */}
+          <LinearGradient
+            colors={['#062329', '#020d10', '#000000']}
+            locations={[0, 0.35, 0.7]}
+            style={{ flex: 1 }} 
+          >
+            <SafeAreaView className="flex-1 bg-transparent">
+              <StatusBar
+                barStyle="light-content"
+                {...(Platform.OS === 'android'
+                  ? { translucent: true, backgroundColor: 'transparent' }
+                  : {})}
+              />
 
-            <Header />
-            <TrackGrid />
-            <MiniPlayer />
-            <BottomNav />
-          </SafeAreaView>
-        </LinearGradient>
-      </SafeAreaProvider>
-    </Provider>
+              <Header />
+              <TrackGrid />
+              <MiniPlayer />
+              <BottomNav />
+            </SafeAreaView>
+          </LinearGradient>
+          
+          <PlayerBottomSheet />
+        </SafeAreaProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }

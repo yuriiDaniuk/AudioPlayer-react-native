@@ -4,11 +4,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface PlayerState {
   activeTrack: any | null; // Поки ставимо any, потім типізуємо під Track
   isPlaying: boolean;
+  isFullPlayerOpen: boolean;
 }
 
 const initialState: PlayerState = {
   activeTrack: null,
   isPlaying: false,
+  isFullPlayerOpen: false,
 };
 
 const playerSlice = createSlice({
@@ -24,8 +26,11 @@ const playerSlice = createSlice({
     setIsPlaying: (state, action: PayloadAction<boolean>) => {
       state.isPlaying = action.payload;
     },
+    setFullPlayerOpen: (state, action: PayloadAction<boolean>) => {
+      state.isFullPlayerOpen = action.payload;
+    },
   },
 });
 
-export const { setActiveTrack, setIsPlaying } = playerSlice.actions;
+export const { setActiveTrack, setIsPlaying, setFullPlayerOpen } = playerSlice.actions;
 export default playerSlice.reducer;
