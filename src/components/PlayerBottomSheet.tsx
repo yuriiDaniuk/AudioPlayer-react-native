@@ -3,48 +3,54 @@ import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
+import { setFullPlayerOpen, setIsPlaying } from '../store/playerSlice';
 
-// Додаємо setIsPlaying для керування кнопкою
-import { setFullPlayerOpen, setIsPlaying } from '../store/playerSlice'; 
-import TrackPlayer from 'react-native-track-player';
+// Імпортуємо TrackPlayer та useProgress для слайдера
+import TrackPlayer, { useProgress } from 'react-native-track-player';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
+import Slider from '@react-native-community/slider';
 
-// 1. Імпортуємо Reanimated
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+// Імпортуємо наші SVG іконки
+import PlayIcon from '../assets/icons/play.svg';
+import PauseIcon from '../assets/icons/pause.svg';
+import SkipBackIcon from '../assets/icons/skip-back.svg';
+import SkipForwardIcon from '../assets/icons/skip-forward.svg';
 
 const { width } = Dimensions.get('window');
-const ARTWORK_SIZE = width * 0.85; // Обкладинка займатиме 85% ширини екрана
+const ARTWORK_SIZE = width * 0.85;
 
 const styles = StyleSheet.create({
-  background: {
-    backgroundColor: '#121212',
-  },
+  background: { backgroundColor: '#121212' },
 });
 
 export default function PlayerBottomSheet() {
   const bottomSheetRef = useRef<BottomSheet>(null);
   const dispatch = useDispatch();
-  
-  // 2. Дістаємо isPlaying з Redux
-  const { isFullPlayerOpen, activeTrack, isPlaying } = useSelector((state: RootState) => state.player);
+
+  const { isFullPlayerOpen, activeTrack, isPlaying } = useSelector(
+    (state: RootState) => state.player,
+  );
+
+  // Дістаємо поточний час пісні для слайдера
+  const { position, duration } = useProgress();
 
   const snapPoints = useMemo(() => ['100%'], []);
-
-  // === АНІМАЦІЯ ОБКЛАДИНКИ ===
-  // Якщо грає - масштаб 1 (100%), якщо пауза - 0.9 (90%)
   const scale = useSharedValue(isPlaying ? 1 : 0.9);
 
   useEffect(() => {
     scale.value = withSpring(isPlaying ? 1 : 0.9, {
-      damping: 15, 
-      stiffness: 150, 
+      damping: 15,
+      stiffness: 150,
     });
   }, [isPlaying, scale]);
 
-  // Прив'язуємо значення до стилів
   const animatedImageStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
-  // ==========================
 
   useEffect(() => {
     if (isFullPlayerOpen) {
@@ -54,7 +60,6 @@ export default function PlayerBottomSheet() {
     }
   }, [isFullPlayerOpen]);
 
-  // Функція для перемикання музики
   const togglePlayPause = async () => {
     if (isPlaying) {
       await TrackPlayer.pause();
@@ -64,7 +69,16 @@ export default function PlayerBottomSheet() {
     dispatch(setIsPlaying(!isPlaying));
   };
 
-  const cleanUri = activeTrack?.coverUrl ? encodeURI(activeTrack.coverUrl.trim()) : null;
+  const cleanUri = activeTrack?.coverUrl
+    ? encodeURI(activeTrack.coverUrl.trim())
+    : null;
+
+  // Функція для форматування секунд у вигляд 00:00
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   return (
     <BottomSheet
@@ -75,21 +89,27 @@ export default function PlayerBottomSheet() {
       enablePanDownToClose={true}
       onClose={() => dispatch(setFullPlayerOpen(false))}
       backgroundStyle={styles.background}
-      handleIndicatorStyle={{ backgroundColor: '#ffffff', opacity: 0.3 }} // Біла смужка зверху
+      handleIndicatorStyle={{ backgroundColor: '#ffffff', opacity: 0.3 }}
     >
       <View className="items-center flex-1 px-6 pt-10">
-        
-        {/* 3. Анімована обкладинка */}
-        <Animated.Image 
+        <Animated.Image
           source={{ uri: cleanUri || '' }}
           style={[
-            { width: ARTWORK_SIZE, height: ARTWORK_SIZE, borderRadius: 16, backgroundColor: '#181818' },
-            animatedImageStyle // Підключаємо нашу анімацію
+            {
+              width: ARTWORK_SIZE,
+              height: ARTWORK_SIZE,
+              borderRadius: 16,
+              backgroundColor: '#181818',
+            },
+            animatedImageStyle,
           ]}
         />
 
         <View className="items-center w-full mt-10 mb-8">
-          <Text className="mb-1 text-2xl font-bold text-white" numberOfLines={1}>
+          <Text
+            className="mb-1 text-2xl font-bold text-white"
+            numberOfLines={1}
+          >
             {activeTrack?.title ?? 'Немає активного треку'}
           </Text>
           <Text className="text-[#AAAAAA] text-lg" numberOfLines={1}>
@@ -97,16 +117,53 @@ export default function PlayerBottomSheet() {
           </Text>
         </View>
 
-        {/* Кнопка керування для тестування анімації (поки що текстові емодзі для простоти) */}
-        <Pressable 
-          onPress={togglePlayPause} 
-          className="items-center justify-center w-20 h-20 mt-4 bg-white rounded-full active:scale-95"
-        >
-           <Text className="text-3xl text-black">
-             {isPlaying ? '⏸' : '▶️'}
-           </Text>
-        </Pressable>
+        {/* --- СЛАЙДЕР --- */}
+        <View className="w-full mt-4 mb-8">
+          <Slider
+            style={{ width: '100%', height: 40 }}
+            minimumValue={0}
+            maximumValue={duration || 1}
+            value={position}
+            minimumTrackTintColor="#FFFFFF"
+            maximumTrackTintColor="#404040"
+            thumbTintColor="#FFFFFF" // Наш класичний білий кружечок
+            onSlidingComplete={async (value: number) => {
+              await TrackPlayer.seekTo(value);
+            }}
+          />
+          <View className="flex-row justify-between mt-[-5]">
+            <Text className="text-[#AAAAAA] text-xs">
+              {formatTime(position)}
+            </Text>
+            <Text className="text-[#AAAAAA] text-xs">
+              {formatTime(duration)}
+            </Text>
+          </View>
+        </View>
 
+        {/* --- КНОПКИ КЕРУВАННЯ --- */}
+        <View className="flex-row items-center justify-center w-full gap-10 mt-4">
+          {/* ЗАГЛУШКА: Кнопка Назад */}
+          <Pressable className="active:opacity-70">
+            <SkipBackIcon width={36} height={36} color="white" />
+          </Pressable>
+
+          <Pressable
+            onPress={togglePlayPause}
+            className="items-center justify-center w-20 h-20 bg-white rounded-full active:scale-95"
+          >
+            {isPlaying ? (
+              <PauseIcon width={36} height={36} color="black" />
+            ) : (
+              <PlayIcon width={36} height={36} color="black" />
+            )}
+          </Pressable>
+
+          {/* ЗАГЛУШКА: Кнопка Далі */}
+          <Pressable className="active:opacity-70">
+            <SkipForwardIcon width={36} height={36} color="white" />
+          </Pressable>
+        </View>
       </View>
     </BottomSheet>
   );
