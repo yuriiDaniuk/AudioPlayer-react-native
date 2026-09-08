@@ -1,65 +1,105 @@
-import React, { useEffect } from 'react';
-import { Platform, StatusBar as RNStatusBar } from 'react-native';
-import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider } from 'react-redux';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 
-import Header from './src/components/Header';
-import TrackGrid from './src/components/TrackGrid';
-import MiniPlayer from './src/components/MiniPlayer';
-import BottomNav from './src/components/BottomNav';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import TabNavigator from './src/navigation/TabNavigator';
 
-import { Provider } from 'react-redux';
 import { store } from './src/store';
-
-import TrackPlayer from 'react-native-track-player';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import PlayerBottomSheet from './src/components/PlayerBottomSheet';
 
-// Створюємо "всеїдний" StatusBar, який ігнорує суворі типи
-const StatusBar = RNStatusBar as any;
+// Імпортуємо TrackPlayer для ініціалізації
+import TrackPlayer, {
+  AppKilledPlaybackBehavior,
+  Capability,
+} from 'react-native-track-player';
+
+const TransparentTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: 'transparent',
+  },
+};
+
+// Функція ініціалізації плеєра
+async function setupPlayer() {
+  let isSetup = false;
+  try {
+    // Перевіряємо, чи плеєр вже ініціалізовано (щоб не крашилося при Hot Reload)
+    await TrackPlayer.getActiveTrackIndex();
+    isSetup = true;
+  } catch {
+    await TrackPlayer.setupPlayer();
+    await TrackPlayer.updateOptions({
+      android: {
+        appKilledPlaybackBehavior:
+          AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+      },
+      capabilities: [
+        Capability.Play,
+        Capability.Pause,
+        Capability.SkipToNext,
+        Capability.SkipToPrevious,
+        Capability.SeekTo,
+      ],
+      compactCapabilities: [Capability.Play, Capability.Pause],
+      progressUpdateEventInterval: 2,
+    });
+    isSetup = true;
+  }
+  return isSetup;
+}
 
 export default function App() {
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
+
   useEffect(() => {
-    async function setupPlayer() {
-      try {
-        await TrackPlayer.setupPlayer();
-        console.log('✅ Плеєр успішно ініціалізовано');
-      } catch (e) {
-        console.log('Помилка ініціалізації плеєра:', e);
-      }
+    async function runSetup() {
+      const ready = await setupPlayer();
+      setIsPlayerReady(ready);
     }
-    setupPlayer();
+    runSetup();
   }, []);
+
+  // ПОКИ ПЛЕЄР ВМИКАЄТЬСЯ — ПОКАЗУЄМО ЗАВАНТАЖЕННЯ
+  if (!isPlayerReady) {
+    return (
+      <SafeAreaProvider
+        style={{
+          flex: 1,
+          backgroundColor: '#121212',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <ActivityIndicator size="large" color="#FFFFFF" />
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#121212' }}>
       <Provider store={store}>
-        {/* 1. ДОДАНО: style={{ flex: 1 }} для SafeAreaProvider */}
         <SafeAreaProvider style={{ flex: 1 }}>
-          
-          {/* 2. ЗАМІНЕНО: className="flex-1" на надійний style={{ flex: 1 }} */}
           <LinearGradient
             colors={['#062329', '#020d10', '#000000']}
-            locations={[0, 0.35, 0.7]}
-            style={{ flex: 1 }} 
+            locations={[0, 0.6, 1]}
+            style={{ flex: 1 }}
           >
-            <SafeAreaView className="flex-1 bg-transparent">
-              <StatusBar
-                barStyle="light-content"
-                {...(Platform.OS === 'android'
-                  ? { translucent: true, backgroundColor: 'transparent' }
-                  : {})}
-              />
+            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+              <NavigationContainer theme={TransparentTheme}>
+                <TabNavigator />
+              </NavigationContainer>
 
-              <Header />
-              <TrackGrid />
-              <MiniPlayer />
-              <BottomNav />
             </SafeAreaView>
           </LinearGradient>
-          
-          <PlayerBottomSheet />
         </SafeAreaProvider>
+
+        <PlayerBottomSheet />
       </Provider>
     </GestureHandlerRootView>
   );

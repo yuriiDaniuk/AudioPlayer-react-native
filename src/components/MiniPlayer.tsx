@@ -64,7 +64,7 @@ export default function MiniPlayer() {
   return (
     <Pressable 
       onPress={() => dispatch(setFullPlayerOpen(true))}
-      className="flex-row items-center bg-[#282828] p-2 mx-4 mb-4 rounded-md overflow-hidden relative active:opacity-95"
+      className="flex-row items-center bg-[#282828] p-2 mx-2 mb-2 rounded-md overflow-hidden relative active:opacity-95"
     >
       {/* Обкладинка */}
       {cleanUri ? (
