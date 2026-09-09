@@ -1270,6 +1270,28 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-netinfo (12.0.1):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-bridging
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - react-native-safe-area-context (5.9.1):
     - hermes-engine
     - RCTRequired
@@ -2109,6 +2131,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - React-mutationobservernativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/mutationobserver`)
+  - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - "react-native-slider (from `../node_modules/@react-native-community/slider`)"
   - react-native-track-player (from `../node_modules/react-native-track-player`)
@@ -2261,6 +2284,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   React-mutationobservernativemodule:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/mutationobserver"
+  react-native-netinfo:
+    :path: "../node_modules/@react-native-community/netinfo"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
   react-native-slider:
@@ -2406,6 +2431,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: acf4ac61f163f15ced7dfad7308957816b2d7abd
   React-microtasksnativemodule: 512d9f7c6b66574d90832a6b10b6102d4a8fdf30
   React-mutationobservernativemodule: 2c5abeb9a4ae316ba6d9420ef8d9baa81faa9d56
+  react-native-netinfo: 58601963060e4df0c1b6b6980d4f24ce2751e64c
   react-native-safe-area-context: f17f4ec987ecdd130820a4a850498b874fb70388
   react-native-slider: 7ce2a5b996adbf8e380d4359bd87a84d2811e58c
   react-native-track-player: dd56f9948e03756a217c75e0a61aa04aab65b5a1

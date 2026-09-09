@@ -19,6 +19,9 @@ import TrackPlayer, {
   Capability,
 } from 'react-native-track-player';
 
+import NetInfo from '@react-native-community/netinfo';
+import FlashMessage, { showMessage } from 'react-native-flash-message';
+
 const TransparentTheme = {
   ...DefaultTheme,
   colors: {
@@ -65,11 +68,9 @@ export default function App() {
       
       if (ready) {
         const savedTrack = await getLastTrack();
-        if (savedTrack) {
-          // 1. Відправляємо в Redux для UI
+        if (savedTrack && savedTrack.audioUrl) {
           store.dispatch(setActiveTrack(savedTrack));
-          // Примусово ставимо на паузу, щоб іконка показувала "Play"
-          store.dispatch(setIsPlaying(false)); 
+          store.dispatch(setIsPlaying(false));
           
           // 2. ВАЖЛИВО: Завантажуємо трек у нативний рушій!
           await TrackPlayer.reset(); // Очищаємо чергу
@@ -94,6 +95,33 @@ export default function App() {
       setIsPlayerReady(ready);
     }
     runSetup();
+  }, []);
+
+  useEffect(() => {
+    // Підписуємося на зміни мережі
+    const unsubscribe = NetInfo.addEventListener(state => {
+      if (state.isConnected === false) {
+        // Якщо інтернет зник
+        showMessage({
+          message: "Немає підключення до інтернету",
+          description: "Музика з мережі може не відтворюватись",
+          type: "danger", // Червоний колір
+          icon: "danger",
+          duration: 4000, // Висітиме 4 секунди
+        });
+      } else if (state.isConnected === true && state.isInternetReachable === true) {
+         // Якщо інтернет з'явився (можна додати за бажанням, але не обов'язково)
+         // showMessage({
+         //   message: "З'єднання відновлено",
+         //   type: "success",
+         // });
+      }
+    });
+
+    // Відписуємося при розмонтуванні
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // ПОКИ ПЛЕЄР ВМИКАЄТЬСЯ — ПОКАЗУЄМО ЗАВАНТАЖЕННЯ
@@ -130,6 +158,8 @@ export default function App() {
         </SafeAreaProvider>
 
         <PlayerBottomSheet />
+
+        <FlashMessage position="top" />
       </Provider>
     </GestureHandlerRootView>
   );
