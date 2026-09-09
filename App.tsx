@@ -9,6 +9,8 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import TabNavigator from './src/navigation/TabNavigator';
 
 import { store } from './src/store';
+import { setActiveTrack, setIsPlaying } from './src/store/playerSlice';
+import { getLastTrack } from './src/utils/storage';
 import PlayerBottomSheet from './src/components/PlayerBottomSheet';
 
 // Імпортуємо TrackPlayer для ініціалізації
@@ -60,6 +62,33 @@ export default function App() {
   useEffect(() => {
     async function runSetup() {
       const ready = await setupPlayer();
+      
+      if (ready) {
+        const savedTrack = await getLastTrack();
+        if (savedTrack) {
+          // 1. Відправляємо в Redux для UI
+          store.dispatch(setActiveTrack(savedTrack));
+          // Примусово ставимо на паузу, щоб іконка показувала "Play"
+          store.dispatch(setIsPlaying(false)); 
+          
+          // 2. ВАЖЛИВО: Завантажуємо трек у нативний рушій!
+          await TrackPlayer.reset(); // Очищаємо чергу
+          
+          // Виводимо в консоль, щоб бачити, які дані прийшли
+          console.log('Відновлений трек:', savedTrack);
+          
+          await TrackPlayer.add([{
+            // Безпечне перетворення ID в рядок (вирішує помилку)
+            id: String(savedTrack.id), 
+            // Додаємо fallback на випадок, якщо поле називається інакше
+            url: savedTrack.audioUrl,
+            title: savedTrack.title || 'Невідомий трек',
+            artist: savedTrack.artist?.name ?? 'Unknown Artist',
+            artwork: savedTrack.coverUrl || '',
+          }]);
+        }
+      }
+      
       setIsPlayerReady(ready);
     }
     runSetup();
@@ -94,7 +123,6 @@ export default function App() {
               <NavigationContainer theme={TransparentTheme}>
                 <TabNavigator />
               </NavigationContainer>
-
             </SafeAreaView>
           </LinearGradient>
         </SafeAreaProvider>

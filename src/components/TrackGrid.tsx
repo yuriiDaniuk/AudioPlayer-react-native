@@ -12,6 +12,7 @@ import { fetchTracks, Track } from '../store/tracksSlice';
 import { AppDispatch, RootState } from '../store'; // Імпортуємо типізований Dispatch
 import { setActiveTrack, setIsPlaying } from '../store/playerSlice'; // Екшен для увімкнення треку
 import TrackPlayer from 'react-native-track-player';
+import { saveLastTrack } from '../utils/storage';
 
 export default function TrackGrid() {
   // Використовуємо типізований dispatch
@@ -33,6 +34,7 @@ export default function TrackGrid() {
     // 1. Оновлюємо UI (міні-плеєр з'явиться)
     dispatch(setActiveTrack(track));
     dispatch(setIsPlaying(true));
+    await saveLastTrack(track);
 
     // 2. Передаємо дані в аудіо-рушій і запускаємо
     await TrackPlayer.reset(); // Очищаємо попередній трек
