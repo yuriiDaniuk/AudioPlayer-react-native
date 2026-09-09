@@ -74,18 +74,20 @@ export default function App() {
           // 2. ВАЖЛИВО: Завантажуємо трек у нативний рушій!
           await TrackPlayer.reset(); // Очищаємо чергу
           
-          // Виводимо в консоль, щоб бачити, які дані прийшли
-          console.log('Відновлений трек:', savedTrack);
-          
-          await TrackPlayer.add([{
-            // Безпечне перетворення ID в рядок (вирішує помилку)
-            id: String(savedTrack.id), 
-            // Додаємо fallback на випадок, якщо поле називається інакше
-            url: savedTrack.audioUrl,
-            title: savedTrack.title || 'Невідомий трек',
-            artist: savedTrack.artist?.name ?? 'Unknown Artist',
-            artwork: savedTrack.coverUrl || '',
-          }]);
+          // Створюємо ідеально чистий об'єкт для нативного iOS
+          const trackToAdd: any = {
+            id: String(savedTrack.id),
+            url: savedTrack.audioUrl, // Обов'язкове поле
+            title: savedTrack.title || 'Unknown Title',
+            artist: savedTrack.artist?.name || 'Unknown Artist',
+          };
+
+          // Додаємо обкладинку ТІЛЬКИ якщо вона реально існує (щоб уникнути EXC_BAD_ACCESS)
+          if (savedTrack.coverUrl) {
+            trackToAdd.artwork = savedTrack.coverUrl;
+          }
+
+          await TrackPlayer.add([trackToAdd]);
         }
       }
       
