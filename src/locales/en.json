@@ -1,0 +1,21 @@
+{
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "library": "Library"
+  },
+  "library": {
+    "title": "My Library",
+    "emptyTitle": "It's empty here 🎵",
+    "emptySubtitle": "Add tracks from the player!"
+  },
+  "player": {
+    "unknownArtist": "Unknown Artist"
+  },
+  "alerts": {
+    "success": "Success!",
+    "added": "Track added to Library 🎵",
+    "error": "Error",
+    "serverError": "Server is not responding"
+  }
+}

@@ -11,7 +11,11 @@ import { Track } from '../store/tracksSlice'; // Якщо в тебе там л�
 import TrackPlayer from 'react-native-track-player';
 import { saveLastTrack } from '../utils/storage';
 
+import { useTranslation } from 'react-i18next';
+
 export default function LibraryScreen() {
+  const { t } = useTranslation();
+
   const [tracks, setTracks] = useState<Track[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
@@ -71,7 +75,7 @@ const handleRemoveTrack = async (trackId: string) => {
       {/* Хедер залишається на місці */}
       <Header />
       
-      <Text className="px-4 py-3 text-2xl font-bold text-white">Моя Бібліотека</Text>
+      <Text className="px-4 py-3 text-2xl font-bold text-white">{t('library.title')}</Text>
 
       {/* Показуємо спінер, поки йде запит */}
       {isLoading ? (
@@ -81,8 +85,8 @@ const handleRemoveTrack = async (trackId: string) => {
       ) : tracks.length === 0 ? (
         /* Показуємо повідомлення, якщо плейлист порожній */
         <View className="items-center justify-center flex-1">
-          <Text className="text-[#AAAAAA] text-base">Тут поки порожньо 🎵</Text>
-          <Text className="mt-2 text-sm text-gray-500">Додайте треки з плеєра!</Text>
+          <Text className="text-[#AAAAAA] text-base">{t('library.empty')}</Text>
+          <Text className="mt-2 text-sm text-gray-500">{t('library.addTracks')}</Text>
         </View>
       ) : (
         /* Виводимо треки вертикальним списком */
@@ -91,10 +95,8 @@ const handleRemoveTrack = async (trackId: string) => {
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingBottom: 100 }}
           renderItem={({ item }) => (
-            // Змінили Pressable на звичайний View для всього рядка
             <View className="flex-row items-center px-4 py-2 mb-2 rounded-lg">
-              
-              {/* Ліва частина - клікабельна для відтворення (займає весь вільний простір) */}
+
               <Pressable 
                 onPress={() => handlePlayTrack(item)}
                 className="flex-row items-center flex-1 active:opacity-70"
@@ -108,12 +110,11 @@ const handleRemoveTrack = async (trackId: string) => {
                     {item.title}
                   </Text>
                   <Text className="text-xs text-[#AAAAAA]" numberOfLines={1}>
-                    {item.artist?.name || 'Невідомий виконавець'}
+                    {item.artist?.name || t('player.unknownArtist')}
                   </Text>
                 </View>
               </Pressable>
 
-              {/* Права частина - кнопка з хрестиком для видалення */}
               <Pressable 
                 onPress={() => handleRemoveTrack(item.id)}
                 className="items-center justify-center w-10 h-10 ml-2 rounded-full active:bg-[#444444]"

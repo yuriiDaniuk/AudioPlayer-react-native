@@ -22,6 +22,8 @@ import TrackPlayer, {
 import NetInfo from '@react-native-community/netinfo';
 import FlashMessage, { showMessage } from 'react-native-flash-message';
 
+import './src/locales/i18n';
+
 const TransparentTheme = {
   ...DefaultTheme,
   colors: {
