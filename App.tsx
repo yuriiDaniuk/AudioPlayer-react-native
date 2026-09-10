@@ -1,56 +1,57 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Provider } from 'react-redux';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+
+import NetInfo from '@react-native-community/netinfo';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+} from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
-
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import TabNavigator from './src/navigation/TabNavigator';
-
-import { store } from './src/store';
-import { setActiveTrack, setIsPlaying } from './src/store/playerSlice';
-import { getLastTrack } from './src/utils/storage';
-import PlayerBottomSheet from './src/components/PlayerBottomSheet';
-
-// Імпортуємо TrackPlayer для ініціалізації
+import { useColorScheme } from 'nativewind';
+import FlashMessage, { showMessage } from 'react-native-flash-message';
+import { useTranslation } from 'react-i18next';
 import TrackPlayer, {
   AppKilledPlaybackBehavior,
   Capability,
 } from 'react-native-track-player';
 
-import NetInfo from '@react-native-community/netinfo';
-import FlashMessage, { showMessage } from 'react-native-flash-message';
-import { useTranslation } from 'react-i18next';
-
 import './src/locales/i18n';
 
-import { loadTheme } from './src/store/themeSlice';
+import PlayerBottomSheet from './src/components/PlayerBottomSheet';
 import ThemeProvider from './src/components/ThemeProvider';
+import TabNavigator from './src/navigation/TabNavigator';
 
-import { useColorScheme } from 'nativewind';
+import { store } from './src/store';
+import { setActiveTrack, setIsPlaying } from './src/store/playerSlice';
+import { loadTheme } from './src/store/themeSlice';
+import { getLastTrack } from './src/utils/storage';
 
-// 1. Створюємо дві теми для навігації
+/** Navigation theme for light mode with a transparent screen background. */
 const LightNavTheme = {
   ...DefaultTheme,
   colors: { ...DefaultTheme.colors, background: 'transparent' },
 };
 
+/** Navigation theme for dark mode with a transparent screen background. */
 const DarkNavTheme = {
   ...DarkTheme,
   colors: { ...DarkTheme.colors, background: 'transparent' },
 };
 
-// 2. Створюємо компонент-обгортку для контенту
+/** Provides themed application backgrounds, navigation, and the expanded player. */
 function RootApp() {
-  // Дістаємо поточну тему від NativeWind (яка вже синхронізована з Redux!)
+  /** Reads the NativeWind theme synchronized by ThemeProvider. */
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  // Динамічні кольори для фонового градієнта
-  const gradientColors = isDark 
-    ? ['#062329', '#020d10', '#000000'] 
-    : ['#E0F7FA', '#F5F5F5', '#FFFFFF']; // Світлий, приємний градієнт
+  // Use contrasting background gradients so content remains readable in both themes.
+  const gradientColors = isDark
+    ? ['#062329', '#020d10', '#000000']
+    : ['#E0F7FA', '#F5F5F5', '#FFFFFF'];
 
   return (
     <SafeAreaProvider style={{ flex: 1 }}>
@@ -71,11 +72,15 @@ function RootApp() {
   );
 }
 
-// Функція ініціалізації плеєра
+/**
+ * Initializes TrackPlayer once and configures its supported transport controls.
+ *
+ * @returns Whether TrackPlayer is ready for use.
+ */
 async function setupPlayer() {
   let isSetup = false;
   try {
-    // Перевіряємо, чи плеєр вже ініціалізовано (щоб не крашилося при Hot Reload)
+    // Probe the existing player so hot reload does not initialize it twice.
     await TrackPlayer.getActiveTrackIndex();
     isSetup = true;
   } catch {
@@ -100,11 +105,16 @@ async function setupPlayer() {
   return isSetup;
 }
 
+/** Bootstraps theme, audio playback, network feedback, and the application tree. */
 export default function App() {
+  /** Resolves localized network status messages. */
   const { t } = useTranslation();
+
+  /** Indicates whether the player and persisted playback state are ready. */
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   useEffect(() => {
+    /** Initializes dependencies and restores the last active track. */
     async function runSetup() {
       store.dispatch(loadTheme());
 
@@ -116,18 +126,18 @@ export default function App() {
           store.dispatch(setActiveTrack(savedTrack));
           store.dispatch(setIsPlaying(false));
           
-          // 2. ВАЖЛИВО: Завантажуємо трек у нативний рушій!
-          await TrackPlayer.reset(); // Очищаємо чергу
-          
-          // Створюємо ідеально чистий об'єкт для нативного iOS
+          // Restore the saved track in the native player without starting playback.
+          await TrackPlayer.reset();
+
+          // Build a minimal native track object to avoid passing unsupported fields.
           const trackToAdd: any = {
             id: String(savedTrack.id),
-            url: savedTrack.audioUrl, // Обов'язкове поле
+            url: savedTrack.audioUrl,
             title: savedTrack.title || 'Unknown Title',
             artist: savedTrack.artist?.name || 'Unknown Artist',
           };
 
-          // Додаємо обкладинку ТІЛЬКИ якщо вона реально існує (щоб уникнути EXC_BAD_ACCESS)
+          // Add artwork only when present to avoid native image-loading failures.
           if (savedTrack.coverUrl) {
             trackToAdd.artwork = savedTrack.coverUrl;
           }
@@ -142,10 +152,9 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Підписуємося на зміни мережі
+    // Subscribe to connectivity changes so users receive immediate offline feedback.
     const unsubscribe = NetInfo.addEventListener(state => {
       if (state.isConnected === false) {
-        // Якщо інтернет зник
         showMessage({
           message: t('alerts.connectionLostTitle'),
           description: t('alerts.connectionLostDescription'),
@@ -157,13 +166,13 @@ export default function App() {
       }
     });
 
-    // Відписуємося при розмонтуванні
+    // Remove the listener when the application root unmounts.
     return () => {
       unsubscribe();
     };
   }, [t]);
 
-  // ПОКИ ПЛЕЄР ВМИКАЄТЬСЯ — ПОКАЗУЄМО ЗАВАНТАЖЕННЯ
+  // Block the main application tree until player initialization and restoration finish.
   if (!isPlayerReady) {
     return (
       <SafeAreaProvider
