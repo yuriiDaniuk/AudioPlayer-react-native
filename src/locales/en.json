@@ -20,6 +20,8 @@
     "success": "Success!",
     "added": "Track added to Library",
     "error": "Error",
-    "serverError": "Server is not responding"
+    "serverError": "Server is not responding",
+    "connectionLostTitle": "No internet connection",
+    "connectionLostDescription": "Music from the network may not play"
   }
 }

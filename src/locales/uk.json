@@ -20,6 +20,8 @@
     "success": "Успіх!",
     "added": "Трек додано до Бібліотеки",
     "error": "Помилка",
-    "serverError": "Сервер не відповідає"
+    "serverError": "Сервер не відповідає",
+    "connectionLostTitle": "Немає підключення до інтернету",
+    "connectionLostDescription": "Музика з мережі може не відтворюватись"
   }
 }

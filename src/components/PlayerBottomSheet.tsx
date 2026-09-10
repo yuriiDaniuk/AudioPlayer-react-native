@@ -90,8 +90,8 @@ export default function PlayerBottomSheet() {
       // Якщо помилок немає, показуємо сповіщення
       if (response.data.success) {
         showMessage({
-          message: 'Успіх!',
-          description: 'Трек додано до Бібліотеки успішно.',
+          message: t('alerts.success'),
+          description: t('alerts.added'),
           type: 'success',
           icon: 'success',
         });
@@ -99,10 +99,10 @@ export default function PlayerBottomSheet() {
     } catch (error: any) {
       // Axios ховає відповідь сервера з помилкою в error.response.data
       const errorMessage =
-        error.response?.data?.error || 'Сервер не відповідає';
+        error.response?.data?.error || t('alerts.serverError');
 
       showMessage({
-        message: 'Помилка',
+        message: t('alerts.error'),
         description: errorMessage,
         type: 'danger',
         icon: 'danger',

@@ -21,6 +21,7 @@ import TrackPlayer, {
 
 import NetInfo from '@react-native-community/netinfo';
 import FlashMessage, { showMessage } from 'react-native-flash-message';
+import { useTranslation } from 'react-i18next';
 
 import './src/locales/i18n';
 
@@ -62,6 +63,7 @@ async function setupPlayer() {
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   useEffect(() => {
@@ -105,18 +107,13 @@ export default function App() {
       if (state.isConnected === false) {
         // Якщо інтернет зник
         showMessage({
-          message: "Немає підключення до інтернету",
-          description: "Музика з мережі може не відтворюватись",
-          type: "danger", // Червоний колір
-          icon: "danger",
-          duration: 4000, // Висітиме 4 секунди
+          message: t('alerts.connectionLostTitle'),
+          description: t('alerts.connectionLostDescription'),
+          type: 'danger',
+          icon: 'danger',
+          duration: 4000,
         });
       } else if (state.isConnected === true && state.isInternetReachable === true) {
-         // Якщо інтернет з'явився (можна додати за бажанням, але не обов'язково)
-         // showMessage({
-         //   message: "З'єднання відновлено",
-         //   type: "success",
-         // });
       }
     });
 
@@ -124,7 +121,7 @@ export default function App() {
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [t]);
 
   // ПОКИ ПЛЕЄР ВМИКАЄТЬСЯ — ПОКАЗУЄМО ЗАВАНТАЖЕННЯ
   if (!isPlayerReady) {
