@@ -1,36 +1,49 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
-// Описуємо типи (використовуємо той самий тип Track, що й раніше)
+import type { PayloadAction } from '@reduxjs/toolkit';
+
+/** Redux state managed by the player slice. */
 interface PlayerState {
-  activeTrack: any | null; // Поки ставимо any, потім типізуємо під Track
+  /** Track currently loaded into the player, when one has been selected. */
+  activeTrack: any | null;
+
+  /** Indicates whether the native player should be considered active. */
   isPlaying: boolean;
+
+  /** Indicates whether the expanded player sheet is visible. */
   isFullPlayerOpen: boolean;
 }
 
+/** Default player state before a track is selected. */
 const initialState: PlayerState = {
   activeTrack: null,
   isPlaying: false,
   isFullPlayerOpen: false,
 };
 
+/** State transitions for track selection, playback, and player visibility. */
 const playerSlice = createSlice({
   name: 'player',
   initialState,
   reducers: {
-    // Дія для перемикання треку (коли клікаємо на пісню в сітці)
+    /** Loads a track and marks playback as active. */
     setActiveTrack: (state, action: PayloadAction<any>) => {
       state.activeTrack = action.payload;
       state.isPlaying = true;
     },
-    // Дія для кнопки Play/Pause
+
+    /** Updates the playback status shown by player controls. */
     setIsPlaying: (state, action: PayloadAction<boolean>) => {
       state.isPlaying = action.payload;
     },
+
+    /** Updates whether the expanded player sheet is open. */
     setFullPlayerOpen: (state, action: PayloadAction<boolean>) => {
       state.isFullPlayerOpen = action.payload;
     },
   },
 });
 
-export const { setActiveTrack, setIsPlaying, setFullPlayerOpen } = playerSlice.actions;
+export const { setActiveTrack, setIsPlaying, setFullPlayerOpen } =
+  playerSlice.actions;
 export default playerSlice.reducer;
