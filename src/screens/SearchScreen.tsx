@@ -10,7 +10,7 @@ export default function SearchScreen() {
     <View className="flex-1 bg-transparent">
       <Header />
       <View className="items-center justify-center flex-1">
-        <Text className="text-xl font-bold text-white">{t('search.title')}</Text>
+        <Text className="text-xl font-bold text-black dark:text-white">{t('search.title')}</Text>
       </View>
     </View>
   );

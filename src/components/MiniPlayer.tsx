@@ -6,8 +6,11 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { setIsPlaying, setFullPlayerOpen} from '../store/playerSlice';
 import TrackPlayer, { useProgress } from 'react-native-track-player';
+import { useColorScheme } from 'nativewind';
 
 export default function MiniPlayer() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const dispatch = useDispatch();
 
   // 1. Читаємо поточний трек і статус відтворення з глобального сховища
@@ -64,24 +67,24 @@ export default function MiniPlayer() {
   return (
     <Pressable 
       onPress={() => dispatch(setFullPlayerOpen(true))}
-      className="flex-row items-center bg-[#282828] p-2 mx-2 mb-2 rounded-md overflow-hidden relative active:opacity-95"
+      className="flex-row items-center bg-[#EAEAEA] dark:bg-[#282828] p-2 mx-2 mb-2 rounded-md overflow-hidden relative active:opacity-95 border border-[#D4D4D4] dark:border-transparent"
     >
       {/* Обкладинка */}
       {cleanUri ? (
         <Image
           source={{ uri: cleanUri }}
-          className="w-10 h-10 rounded-sm bg-[#181818]"
+          className="w-10 h-10 rounded-sm bg-gray-300 dark:bg-[#181818]"
         />
       ) : (
-        <View className="w-10 h-10 rounded-sm bg-[#181818]" />
+        <View className="w-10 h-10 rounded-sm bg-gray-300 dark:bg-[#181818]" />
       )}
 
       {/* Інформація про трек */}
       <View className="flex-1 ml-3">
-        <Text className="text-sm font-semibold text-white" numberOfLines={1}>
+        <Text className="text-sm font-semibold text-black dark:text-white" numberOfLines={1}>
           {activeTrack.title}
         </Text>
-        <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>
+        <Text className="text-gray-600 dark:text-[#AAAAAA] text-xs" numberOfLines={1}>
           {activeTrack.artist.name}
         </Text>
       </View>
@@ -95,9 +98,9 @@ export default function MiniPlayer() {
         className="flex items-center justify-center px-4 py-2 active:opacity-70"
       >
         {isPlaying ? (
-          <PauseIcon width={24} height={24} color="white" />
+          <PauseIcon width={24} height={24} color={isDark ? 'white' : 'black'} />
         ) : (
-          <PlayIcon width={24} height={24} color="white" />
+          <PlayIcon width={24} height={24} color={isDark ? 'white' : 'black'} />
         )}
       </Pressable>
 
@@ -112,9 +115,9 @@ export default function MiniPlayer() {
         // Робимо зону натискання вищою (h-4 = 16px), але притискаємо контент до низу (justify-end)
         className="absolute bottom-0 left-0 right-0 justify-end h-4"
       >
-        <View className="h-[2px] bg-[#404040] w-full relative">
+        <View className="h-[2px] bg-gray-300 dark:bg-[#404040] w-full relative">
           <View 
-            className="absolute top-0 left-0 h-full bg-white" 
+            className="absolute top-0 left-0 h-full bg-black dark:bg-white" 
             style={{ width: `${progressPercentage}%` }} 
           />
         </View>

@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import TabNavigator from './src/navigation/TabNavigator';
 
 import { store } from './src/store';
@@ -25,13 +25,51 @@ import { useTranslation } from 'react-i18next';
 
 import './src/locales/i18n';
 
-const TransparentTheme = {
+import { loadTheme } from './src/store/themeSlice';
+import ThemeProvider from './src/components/ThemeProvider';
+
+import { useColorScheme } from 'nativewind';
+
+// 1. Створюємо дві теми для навігації
+const LightNavTheme = {
   ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: 'transparent',
-  },
+  colors: { ...DefaultTheme.colors, background: 'transparent' },
 };
+
+const DarkNavTheme = {
+  ...DarkTheme,
+  colors: { ...DarkTheme.colors, background: 'transparent' },
+};
+
+// 2. Створюємо компонент-обгортку для контенту
+function RootApp() {
+  // Дістаємо поточну тему від NativeWind (яка вже синхронізована з Redux!)
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
+  // Динамічні кольори для фонового градієнта
+  const gradientColors = isDark 
+    ? ['#062329', '#020d10', '#000000'] 
+    : ['#E0F7FA', '#F5F5F5', '#FFFFFF']; // Світлий, приємний градієнт
+
+  return (
+    <SafeAreaProvider style={{ flex: 1 }}>
+      <LinearGradient
+        colors={gradientColors}
+        locations={[0, 0.6, 1]}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+          <NavigationContainer theme={isDark ? DarkNavTheme : LightNavTheme}>
+            <TabNavigator />
+          </NavigationContainer>
+        </SafeAreaView>
+      </LinearGradient>
+      
+      <PlayerBottomSheet />
+    </SafeAreaProvider>
+  );
+}
 
 // Функція ініціалізації плеєра
 async function setupPlayer() {
@@ -68,6 +106,8 @@ export default function App() {
 
   useEffect(() => {
     async function runSetup() {
+      store.dispatch(loadTheme());
+
       const ready = await setupPlayer();
       
       if (ready) {
@@ -142,23 +182,10 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#121212' }}>
       <Provider store={store}>
-        <SafeAreaProvider style={{ flex: 1 }}>
-          <LinearGradient
-            colors={['#062329', '#020d10', '#000000']}
-            locations={[0, 0.6, 1]}
-            style={{ flex: 1 }}
-          >
-            <SafeAreaView style={{ flex: 1 }} edges={['top']}>
-              <NavigationContainer theme={TransparentTheme}>
-                <TabNavigator />
-              </NavigationContainer>
-            </SafeAreaView>
-          </LinearGradient>
-        </SafeAreaProvider>
-
-        <PlayerBottomSheet />
-
+        <ThemeProvider>
+        <RootApp />
         <FlashMessage position="top" />
+        </ThemeProvider>
       </Provider>
     </GestureHandlerRootView>
   );

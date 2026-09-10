@@ -23,6 +23,7 @@ import SkipForwardIcon from '../assets/icons/skip-forward.svg';
 import { showMessage } from 'react-native-flash-message';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import { useColorScheme } from 'nativewind';
 
 const { width } = Dimensions.get('window');
 const ARTWORK_SIZE = width * 0.85;
@@ -33,6 +34,8 @@ const styles = StyleSheet.create({
 
 export default function PlayerBottomSheet() {
   const { t } = useTranslation();
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const bottomSheetRef = useRef<BottomSheet>(null);
   const dispatch = useDispatch();
 
@@ -129,8 +132,14 @@ export default function PlayerBottomSheet() {
       enableDynamicSizing={false}
       enablePanDownToClose={true}
       onClose={() => dispatch(setFullPlayerOpen(false))}
-      backgroundStyle={styles.background}
-      handleIndicatorStyle={{ backgroundColor: '#ffffff', opacity: 0.3 }}
+      backgroundStyle={[
+        styles.background,
+        { backgroundColor: isDark ? '#121212' : '#F5F5F5' },
+      ]}
+      handleIndicatorStyle={{
+        backgroundColor: isDark ? '#ffffff' : '#000000',
+        opacity: 0.3,
+      }}
     >
       <View className="items-center flex-1 px-6 pt-10">
         <Animated.Image
@@ -140,7 +149,7 @@ export default function PlayerBottomSheet() {
               width: ARTWORK_SIZE,
               height: ARTWORK_SIZE,
               borderRadius: 16,
-              backgroundColor: '#181818',
+              backgroundColor: isDark ? '#181818' : '#E5E5E5',
             },
             animatedImageStyle,
           ]}
@@ -148,12 +157,15 @@ export default function PlayerBottomSheet() {
 
         <View className="items-center w-full mt-10 mb-8">
           <Text
-            className="mb-1 text-2xl font-bold text-white"
+            className="mb-1 text-2xl font-bold text-black dark:text-white"
             numberOfLines={1}
           >
             {activeTrack?.title ?? 'Немає активного треку'}
           </Text>
-          <Text className="text-[#AAAAAA] text-lg" numberOfLines={1}>
+          <Text
+            className="text-gray-600 dark:text-[#AAAAAA] text-lg"
+            numberOfLines={1}
+          >
             {activeTrack?.artist?.name ?? 'Невідомий артист'}
           </Text>
         </View>
@@ -165,18 +177,18 @@ export default function PlayerBottomSheet() {
             minimumValue={0}
             maximumValue={duration || 1}
             value={position}
-            minimumTrackTintColor="#FFFFFF"
-            maximumTrackTintColor="#404040"
-            thumbTintColor="#FFFFFF" // Наш класичний білий кружечок
+            minimumTrackTintColor={isDark ? '#FFFFFF' : '#111111'}
+            maximumTrackTintColor={isDark ? '#404040' : '#D1D1D1'}
+            thumbTintColor={isDark ? '#FFFFFF' : '#111111'}
             onSlidingComplete={async (value: number) => {
               await TrackPlayer.seekTo(value);
             }}
           />
           <View className="flex-row justify-between mt-[-5]">
-            <Text className="text-[#AAAAAA] text-xs">
+            <Text className="text-gray-600 dark:text-[#AAAAAA] text-xs">
               {formatTime(position)}
             </Text>
-            <Text className="text-[#AAAAAA] text-xs">
+            <Text className="text-gray-600 dark:text-[#AAAAAA] text-xs">
               {formatTime(duration)}
             </Text>
           </View>
@@ -186,31 +198,51 @@ export default function PlayerBottomSheet() {
         <View className="flex-row items-center justify-center w-full gap-10 mt-4">
           {/* ЗАГЛУШКА: Кнопка Назад */}
           <Pressable className="active:opacity-70">
-            <SkipBackIcon width={36} height={36} color="white" />
+            <SkipBackIcon
+              width={36}
+              height={36}
+              color={isDark ? 'white' : '#111111'}
+            />
           </Pressable>
 
           <Pressable
             onPress={togglePlayPause}
-            className="items-center justify-center w-20 h-20 bg-white rounded-full active:scale-95"
+            className="items-center justify-center w-20 h-20 rounded-full bg-[#111111] dark:bg-white active:scale-95"
           >
             {isPlaying ? (
-              <PauseIcon width={36} height={36} color="black" />
+              <PauseIcon
+                width={36}
+                height={36}
+                color={isDark ? 'black' : 'white'}
+              />
             ) : (
-              <PlayIcon width={36} height={36} color="black" />
+              <View className="ml-1">
+                <PlayIcon
+                  width={36}
+                  height={36}
+                  color={isDark ? 'black' : 'white'}
+                />
+              </View>
             )}
           </Pressable>
 
           {/* ЗАГЛУШКА: Кнопка Далі */}
           <Pressable className="active:opacity-70">
-            <SkipForwardIcon width={36} height={36} color="white" />
+            <SkipForwardIcon
+              width={36}
+              height={36}
+              color={isDark ? 'white' : '#111111'}
+            />
           </Pressable>
         </View>
         <View className="items-center justify-center w-full mt-4">
-            <Pressable
+          <Pressable
             onPress={handleAddToPlaylist}
-            className="items-center justify-center w-full h-12 rounded-full bg-[#282828] active:bg-[#404040]"
+            className="items-center justify-center w-full h-12 rounded-full bg-gray-200 active:bg-gray-300 dark:bg-[#282828] dark:active:bg-[#404040]"
           >
-            <Text className="text-xl text-white">{t('player.addTrack')}</Text>
+            <Text className="text-xl text-gray-900 dark:text-white">
+              {t('player.addTrack')}
+            </Text>
           </Pressable>
         </View>
       </View>

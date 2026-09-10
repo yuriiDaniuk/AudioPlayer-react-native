@@ -13,8 +13,12 @@ import { AppDispatch, RootState } from '../store'; // Імпортуємо ти�
 import { setActiveTrack, setIsPlaying } from '../store/playerSlice'; // Екшен для увімкнення треку
 import TrackPlayer from 'react-native-track-player';
 import { saveLastTrack } from '../utils/storage';
+import { useColorScheme } from 'nativewind';
 
 export default function TrackGrid() {
+  const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === 'dark';
+
   // Використовуємо типізований dispatch
   const dispatch = useDispatch<AppDispatch>();
 
@@ -70,12 +74,12 @@ export default function TrackGrid() {
           <View className="w-full aspect-square bg-[#282828] rounded-md mb-1.5" />
         )}
         <Text
-          className="text-white text-[13px] font-semibold"
+          className="text-black dark:text-white text-[13px] font-semibold"
           numberOfLines={1}
         >
           {item.title}
         </Text>
-        <Text className="text-[#AAAAAA] text-xs" numberOfLines={1}>
+        <Text className="text-gray-600 dark:text-[#AAAAAA] text-xs" numberOfLines={1}>
           {item.artist.name}
         </Text>
       </Pressable>
@@ -85,7 +89,7 @@ export default function TrackGrid() {
   if (status === 'loading') {
     return (
       <View className="items-center justify-center flex-1 pt-10">
-        <ActivityIndicator size="large" color="#ffffff" />
+        <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#555555'} />
       </View>
     );
   }
