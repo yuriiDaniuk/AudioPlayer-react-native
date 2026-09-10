@@ -10,7 +10,8 @@
     "addTracks": "Add tracks from the player!"
   },
   "search": {
-    "title": "Search"
+    "title": "Search",
+    "placeholder": "Search songs, albums, artists..."
   },
   "player": {
     "unknownArtist": "Unknown Artist",
