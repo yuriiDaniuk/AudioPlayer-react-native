@@ -11,7 +11,8 @@
   },
   "search": {
     "title": "Search",
-    "placeholder": "Search songs, albums, artists..."
+    "placeholder": "Search songs, albums, artists...",
+    "noResults": "No results found"
   },
   "player": {
     "unknownArtist": "Unknown Artist",

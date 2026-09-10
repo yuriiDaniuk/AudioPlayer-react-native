@@ -1,43 +1,64 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
   Text,
   TextInput,
-  FlatList,
-  Pressable,
-  Image,
-  ActivityIndicator,
+  View,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+
 import axios from 'axios';
 import { useColorScheme } from 'nativewind';
-
-import Header from '../components/Header';
-import { setActiveTrack, setIsPlaying } from '../store/playerSlice';
-import { Track } from '../store/tracksSlice';
-import TrackPlayer from 'react-native-track-player';
-import { saveLastTrack } from '../utils/storage';
 import { useTranslation } from 'react-i18next';
+import TrackPlayer from 'react-native-track-player';
+import { useDispatch } from 'react-redux';
 
-// Імпортуємо іконку лупи (перевір, чи правильний шлях)
 import SearchIcon from '../assets/icons/search.svg';
+import Header from '../components/Header';
 
+import { setActiveTrack, setIsPlaying } from '../store/playerSlice';
+import { saveLastTrack } from '../utils/storage';
+
+import type { Track } from '../store/tracksSlice';
+
+/** Renders the track search experience and starts playback for a selected result. */
 export default function SearchScreen() {
+  /** Resolves localized labels and placeholders used by the screen. */
   const { t } = useTranslation();
+
+  /** Dispatches player state transitions to the Redux store. */
   const dispatch = useDispatch();
+
+  /** Provides the active application color scheme for theme-aware styles. */
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  /** Current value of the search input. */
   const [query, setQuery] = useState('');
+
+  /** Tracks returned by the latest completed search request. */
   const [results, setResults] = useState<Track[]>([]);
+
+  /** Indicates whether a non-empty query has completed its search attempt. */
   const [hasSearched, setHasSearched] = useState(false);
+
+  /** Indicates that the debounced search request is still in progress. */
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Persists a selected track, loads it into the audio player, and starts playback.
+   *
+   * @param track Track selected from the search results.
+   * @returns Promise that resolves after the track has started playing.
+   */
   const handlePlayTrack = async (track: Track) => {
     dispatch(setActiveTrack(track));
     dispatch(setIsPlaying(true));
     await saveLastTrack(track);
 
+    // Replace the current queue with the selected track before starting playback.
     await TrackPlayer.reset();
     await TrackPlayer.add({
       id: track.id,
@@ -49,9 +70,15 @@ export default function SearchScreen() {
     await TrackPlayer.play();
   };
 
-  // ЛОГІКА ДЕБАУНСУ ТА ПОШУКУ
+  /**
+   * Searches the playlist after the user pauses input and keeps the result state
+   * synchronized with the current query.
+   *
+   * The cleanup function cancels a pending debounce timer when the query changes
+   * or the component unmounts.
+   */
   useEffect(() => {
-    // Якщо поле порожнє, очищаємо результати
+    // An empty query resets the search state without making a network request.
     if (!query.trim()) {
       setResults([]);
       setHasSearched(false);
@@ -61,10 +88,11 @@ export default function SearchScreen() {
 
     setIsLoading(true);
 
-    // Встановлюємо таймер на 500мс
+    // Delay the request until the user has paused typing for 500 milliseconds.
     const delayDebounceFn = setTimeout(async () => {
       setHasSearched(true);
       try {
+        // Fetch the complete playlist, then apply the title and artist filters locally.
         const response = await axios.get('http://localhost:3000/api/playlist');
         const allTracks: Track[] = response.data.tracks || [];
 
@@ -80,60 +108,62 @@ export default function SearchScreen() {
       } finally {
         setIsLoading(false);
       }
-    }, 500); // Затримка 500 мілісекунд
+    }, 500);
 
-    // Очищаємо попередній таймер, якщо користувач продовжує друкувати
+    // Cancel the previous timer when the query changes before the delay expires.
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
 
   return (
     <View className="flex-1 bg-transparent">
+      {/* Global navigation and screen heading. */}
       <Header />
 
       <Text className="px-4 py-3 text-2xl font-bold text-black dark:text-white">
         {t('tabs.search')}
       </Text>
 
-      {/* НОВЕ ПОЛЕ ВВОДУ З ІКОНКОЮ */}
-      <View 
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              height: 48,
-              paddingHorizontal: 12,
-              marginHorizontal: 16,
-              marginBottom: 16,
-              borderRadius: 8,
-              backgroundColor: isDark ? '#282828' : '#E5E7EB', // Еквівалент gray-200 / #282828
-            }}
-          >
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={t('search.placeholder')}
-              placeholderTextColor="#888888"
-              returnKeyType="search"
-              textAlignVertical="center"
-              style={{
-                flex: 1,
-                marginLeft: 8,
-                fontSize: 16,
-                color: isDark ? '#FFFFFF' : '#000000',
-                padding: 0,
-                margin: 0,
-                includeFontPadding: false, // Головний рятувальник від скакання на Android
-                height: '100%',
-              }}
-            />
-            <SearchIcon 
-              width={20} 
-              height={20} 
-              color={isDark ? '#AAAAAA' : '#666666'} 
-            />
-          </View>
+      {/* Search bar wrapper containing the controlled input and search icon. */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          height: 48,
+          paddingHorizontal: 12,
+          marginHorizontal: 16,
+          marginBottom: 16,
+          borderRadius: 8,
+          backgroundColor: isDark ? '#282828' : '#E5E7EB',
+        }}
+      >
+        <TextInput
+          value={query}
+          onChangeText={setQuery}
+          placeholder={t('search.placeholder')}
+          placeholderTextColor="#888888"
+          returnKeyType="search"
+          textAlignVertical="center"
+          style={{
+            flex: 1,
+            marginLeft: 8,
+            fontSize: 16,
+            color: isDark ? '#FFFFFF' : '#000000',
+            padding: 0,
+            margin: 0,
+            includeFontPadding: false,
+            height: '100%',
+          }}
+        />
+        <SearchIcon
+          width={20}
+          height={20}
+          color={isDark ? '#AAAAAA' : '#666666'}
+        />
+      </View>
 
-      {/* РЕЗУЛЬТАТИ ПОШУКУ */}
+      {/* Search content: loading state, empty state, or the matching track list. */}
       {isLoading ? (
+        // Display progress while the debounced playlist request is pending.
         <View className="items-center justify-center flex-1">
           <ActivityIndicator
             size="large"
@@ -141,12 +171,14 @@ export default function SearchScreen() {
           />
         </View>
       ) : hasSearched && results.length === 0 ? (
+        // Display feedback when a completed search produced no matching tracks.
         <View className="items-center justify-center flex-1">
           <Text className="text-base text-gray-600 dark:text-[#AAAAAA]">
-            Нічого не знайдено
+            {t('search.noResults')}
           </Text>
         </View>
       ) : (
+        // Render each matching track as an actionable playback row.
         <FlatList
           data={results}
           keyExtractor={item => item.id}
