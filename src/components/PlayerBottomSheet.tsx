@@ -20,6 +20,9 @@ import PauseIcon from '../assets/icons/pause.svg';
 import SkipBackIcon from '../assets/icons/skip-back.svg';
 import SkipForwardIcon from '../assets/icons/skip-forward.svg';
 
+import { showMessage } from 'react-native-flash-message';
+import axios from 'axios';
+
 const { width } = Dimensions.get('window');
 const ARTWORK_SIZE = width * 0.85;
 
@@ -67,6 +70,42 @@ export default function PlayerBottomSheet() {
       await TrackPlayer.play();
     }
     dispatch(setIsPlaying(!isPlaying));
+  };
+
+  const handleAddToPlaylist = async () => {
+    // Перевіряємо, чи є взагалі активний трек
+    if (!activeTrack) return;
+
+    try {
+      // Axios сам налаштовує заголовки і парсить JSON
+      const response = await axios.post(
+        'http://localhost:3000/api/playlist/add',
+        {
+          trackId: activeTrack.id,
+        },
+      );
+
+      // Якщо помилок немає, показуємо сповіщення
+      if (response.data.success) {
+        showMessage({
+          message: 'Успіх!',
+          description: 'Трек додано до Бібліотеки успішно.',
+          type: 'success',
+          icon: 'success',
+        });
+      }
+    } catch (error: any) {
+      // Axios ховає відповідь сервера з помилкою в error.response.data
+      const errorMessage =
+        error.response?.data?.error || 'Сервер не відповідає';
+
+      showMessage({
+        message: 'Помилка',
+        description: errorMessage,
+        type: 'danger',
+        icon: 'danger',
+      });
+    }
   };
 
   const cleanUri = activeTrack?.coverUrl
@@ -162,6 +201,14 @@ export default function PlayerBottomSheet() {
           {/* ЗАГЛУШКА: Кнопка Далі */}
           <Pressable className="active:opacity-70">
             <SkipForwardIcon width={36} height={36} color="white" />
+          </Pressable>
+        </View>
+        <View className="items-center justify-center w-full mt-4">
+            <Pressable
+            onPress={handleAddToPlaylist}
+            className="items-center justify-center w-full h-12 rounded-full bg-[#282828] active:bg-[#404040]"
+          >
+            <Text className="text-xl text-white">Додати трек до плейлиста</Text>
           </Pressable>
         </View>
       </View>
