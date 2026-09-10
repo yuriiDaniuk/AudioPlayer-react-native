@@ -6,15 +6,19 @@
   },
   "library": {
     "title": "My Library",
-    "emptyTitle": "It's empty here 🎵",
-    "emptySubtitle": "Add tracks from the player!"
+    "empty": "It's empty here",
+    "addTracks": "Add tracks from the player!"
+  },
+  "search": {
+    "title": "Search"
   },
   "player": {
-    "unknownArtist": "Unknown Artist"
+    "unknownArtist": "Unknown Artist",
+    "addTrack": "Add track to playlist"
   },
   "alerts": {
     "success": "Success!",
-    "added": "Track added to Library 🎵",
+    "added": "Track added to Library",
     "error": "Error",
     "serverError": "Server is not responding"
   }

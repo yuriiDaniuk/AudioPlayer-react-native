@@ -22,6 +22,7 @@ import SkipForwardIcon from '../assets/icons/skip-forward.svg';
 
 import { showMessage } from 'react-native-flash-message';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 const ARTWORK_SIZE = width * 0.85;
@@ -31,6 +32,7 @@ const styles = StyleSheet.create({
 });
 
 export default function PlayerBottomSheet() {
+  const { t } = useTranslation();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const dispatch = useDispatch();
 
@@ -208,7 +210,7 @@ export default function PlayerBottomSheet() {
             onPress={handleAddToPlaylist}
             className="items-center justify-center w-full h-12 rounded-full bg-[#282828] active:bg-[#404040]"
           >
-            <Text className="text-xl text-white">Додати трек до плейлиста</Text>
+            <Text className="text-xl text-white">{t('player.addTrack')}</Text>
           </Pressable>
         </View>
       </View>

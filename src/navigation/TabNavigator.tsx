@@ -11,6 +11,7 @@ import MiniPlayer from '../components/MiniPlayer';
 import HomeIcon from '../assets/icons/home.svg';
 import SearchIcon from '../assets/icons/search.svg';
 import LibraryIcon from '../assets/icons/library.svg';
+import { useTranslation } from 'react-i18next';
 
 const Tab = createBottomTabNavigator();
 
@@ -36,6 +37,8 @@ const renderLibraryIcon = ({ color }: { color: string }) => (
 );
 
 export default function TabNavigator() {
+  const { t } = useTranslation();
+
   return (
     <Tab.Navigator
       tabBar={CustomTabBar}
@@ -54,17 +57,17 @@ export default function TabNavigator() {
       <Tab.Screen 
         name="Головна" 
         component={HomeScreen} 
-        options={{ tabBarIcon: renderHomeIcon }} 
+        options={{ tabBarLabel: t('tabs.home'), tabBarIcon: renderHomeIcon }} 
       />
       <Tab.Screen 
         name="Пошук" 
         component={SearchScreen} 
-        options={{ tabBarIcon: renderSearchIcon }} 
+        options={{ tabBarLabel: t('tabs.search'), tabBarIcon: renderSearchIcon }} 
       />
       <Tab.Screen 
         name="Бібліотека" 
         component={LibraryScreen} 
-        options={{ tabBarIcon: renderLibraryIcon }} 
+        options={{ tabBarLabel: t('tabs.library'), tabBarIcon: renderLibraryIcon }} 
       />
     </Tab.Navigator>
   );
