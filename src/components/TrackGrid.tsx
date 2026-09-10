@@ -1,58 +1,71 @@
 import React, { useEffect } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  Image,
   ActivityIndicator,
+  FlatList,
+  Image,
+  Pressable,
+  Text,
+  View,
 } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchTracks, Track } from '../store/tracksSlice';
-import { AppDispatch, RootState } from '../store'; // Імпортуємо типізований Dispatch
-import { setActiveTrack, setIsPlaying } from '../store/playerSlice'; // Екшен для увімкнення треку
-import TrackPlayer from 'react-native-track-player';
-import { saveLastTrack } from '../utils/storage';
-import { useColorScheme } from 'nativewind';
 
+import { useColorScheme } from 'nativewind';
+import TrackPlayer from 'react-native-track-player';
+import { useDispatch, useSelector } from 'react-redux';
+
+import { setActiveTrack, setIsPlaying } from '../store/playerSlice';
+import { fetchTracks } from '../store/tracksSlice';
+import { saveLastTrack } from '../utils/storage';
+
+import type { AppDispatch, RootState } from '../store';
+import type { Track } from '../store/tracksSlice';
+
+/** Loads tracks and renders them as a three-column playable grid. */
 export default function TrackGrid() {
+  /** Provides the active theme for the loading indicator. */
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  // Використовуємо типізований dispatch
+  /** Dispatches typed track-loading and player actions to Redux. */
   const dispatch = useDispatch<AppDispatch>();
 
-  // Дістаємо треки та статус завантаження з глобального стейту
+  /** Reads the cached tracks and their current loading status from Redux. */
   const { items: tracks, status } = useSelector(
     (state: RootState) => state.tracks,
   );
 
+  // Fetch tracks only on the initial idle state; subsequent renders use the store cache.
   useEffect(() => {
-    // Якщо ми ще не завантажували треки — робимо запит
     if (status === 'idle') {
       dispatch(fetchTracks());
     }
   }, [status, dispatch]);
 
+  /**
+   * Activates a selected track and starts playback through TrackPlayer.
+   *
+   * @param track Track selected from the grid.
+   * @returns Promise that resolves after the track has started playing.
+   */
   const handleTrackPress = async (track: Track) => {
-    // 1. Оновлюємо UI (міні-плеєр з'явиться)
     dispatch(setActiveTrack(track));
     dispatch(setIsPlaying(true));
     await saveLastTrack(track);
 
-    // 2. Передаємо дані в аудіо-рушій і запускаємо
-    await TrackPlayer.reset(); // Очищаємо попередній трек
+    // Replace the current player queue with the selected track before playback.
+    await TrackPlayer.reset();
     await TrackPlayer.add({
       id: track.id,
-      url: track.audioUrl, // URL самого аудіофайлу
+      url: track.audioUrl,
       title: track.title,
       artist: track.artist.name,
-      artwork: track.coverUrl, // Для обкладинки на екрані блокування
+      artwork: track.coverUrl,
     });
     await TrackPlayer.play();
   };
 
+  /** Renders one track tile with normalized artwork and playback interaction. */
   const renderGridItem = ({ item }: { item: Track }) => {
+    // Reject missing or whitespace-only URLs before passing them to the native image view.
     const hasValidUrl =
       item.coverUrl &&
       typeof item.coverUrl === 'string' &&
@@ -60,7 +73,6 @@ export default function TrackGrid() {
     const cleanUri = hasValidUrl ? encodeURI(item.coverUrl.trim()) : null;
 
     return (
-      // Додали обробник натискання:
       <Pressable
         onPress={() => handleTrackPress(item)}
         className="w-[31%] mb-4 active:opacity-70"
@@ -87,6 +99,7 @@ export default function TrackGrid() {
   };
 
   if (status === 'loading') {
+    // Keep the grid area stable while the initial track request is pending.
     return (
       <View className="items-center justify-center flex-1 pt-10">
         <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#555555'} />
@@ -94,6 +107,7 @@ export default function TrackGrid() {
     );
   }
 
+  // Render the cached track collection as a responsive three-column list.
   return (
     <FlatList
       data={tracks}

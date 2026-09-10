@@ -1,38 +1,51 @@
 import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import GradientText from './GradientText';
+import { Pressable, Text, View } from 'react-native';
+
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { RootState, AppDispatch } from '../store';
-import { setTheme, ThemeMode } from '../store/themeSlice';
 import { useDispatch, useSelector } from 'react-redux';
 
+import GradientText from './GradientText';
+
+import { setTheme } from '../store/themeSlice';
+
+import type { AppDispatch, RootState } from '../store';
+import type { ThemeMode } from '../store/themeSlice';
+
+/** Renders the application logo and controls for navigation, theme, and language. */
 export default function Header() {
+  /** Provides access to the active language and language-switching method. */
   const { i18n } = useTranslation();
+
+  /** Dispatches typed theme actions to the Redux store. */
   const dispatch = useDispatch<AppDispatch>();
+
+  /** Reads the currently selected theme mode from application state. */
   const themeMode = useSelector((state: RootState) => state.theme.mode);
+
+  /** Provides navigation actions for the header logo. */
   const navigation = useNavigation<any>();
 
+  /** Switches between the light and dark theme modes. */
   const toggleTheme = () => {
-    // Якщо зараз темна (або системна) — вмикаємо світлу, інакше — темну
     const nextTheme: ThemeMode = themeMode === 'dark' ? 'light' : 'dark';
     dispatch(setTheme(nextTheme));
   };
 
+  /** Switches between the Ukrainian and English interface languages. */
   const toggleLanguage = () => {
-    // Якщо зараз українська ('uk') — перемикаємо на англійську ('en'), і навпаки
     const nextLang = i18n.language === 'uk' ? 'en' : 'uk';
     i18n.changeLanguage(nextLang);
   };
 
-  // Визначаємо кольори градієнта залежно від теми (щоб текст не зливався зі світлим фоном)
-  const gradientColors = themeMode === 'dark' 
-    ? ['#FFFFFF', '#AAAAAA'] // Біло-сірий для темної теми
-    : ['#121212', '#666666']; // Темно-сірий для світлої теми
+  // Select contrasting logo colors so the gradient remains readable in either theme.
+  const gradientColors = themeMode === 'dark'
+    ? ['#FFFFFF', '#AAAAAA']
+    : ['#121212', '#666666'];
 
   return (
     <View className="flex-row items-center justify-between px-4 py-3">
-      {/* Логотип */}
+      {/* Logo button navigates to the home screen. */}
       <Pressable
         className="flex-row items-center active:opacity-70"
         onPress={() => navigation.navigate('Головна')}
@@ -48,11 +61,10 @@ export default function Header() {
         />
       </Pressable>
 
-      {/* Контейнер для кнопок праворуч */}
+      {/* Header action buttons for theme, language, and profile access. */}
       <View className="flex-row items-center gap-3">
-        
-        {/* НОВА КНОПКА: Перемикач теми */}
-        <Pressable 
+        {/* Toggles between light and dark theme modes. */}
+        <Pressable
           onPress={toggleTheme}
           className="items-center justify-center w-8 h-8 bg-gray-200 rounded-full dark:bg-[#282828] active:opacity-70"
         >
@@ -61,7 +73,7 @@ export default function Header() {
           </Text>
         </Pressable>
 
-        {/* Кнопка мови (тепер з підтримкою світлої теми) */}
+        {/* Toggles the interface language and displays the language to activate. */}
         <Pressable
           onPress={toggleLanguage}
           className="items-center justify-center h-8 px-3 bg-gray-200 rounded-full dark:bg-[#282828] active:opacity-70"
@@ -71,11 +83,10 @@ export default function Header() {
           </Text>
         </Pressable>
 
-        {/* Аватарка (тепер з підтримкою світлої теми) */}
+        {/* Displays the current profile affordance. */}
         <Pressable className="items-center justify-center w-8 h-8 bg-gray-300 rounded-full dark:bg-[#444444] active:opacity-70">
           <Text className="text-sm font-bold text-black dark:text-white">Ю</Text>
         </Pressable>
-        
       </View>
     </View>
   );

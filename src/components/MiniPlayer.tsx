@@ -1,67 +1,75 @@
-import PlayIcon from '../assets/icons/play.svg';
-import PauseIcon from '../assets/icons/pause.svg';
-import React, {useState} from 'react';
-import { View, Text, Image, Pressable, GestureResponderEvent } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
-import { setIsPlaying, setFullPlayerOpen} from '../store/playerSlice';
-import TrackPlayer, { useProgress } from 'react-native-track-player';
-import { useColorScheme } from 'nativewind';
+import React, { useState } from 'react';
+import { Image, Pressable, Text, View } from 'react-native';
 
+import { useColorScheme } from 'nativewind';
+import TrackPlayer, { useProgress } from 'react-native-track-player';
+import { useDispatch, useSelector } from 'react-redux';
+
+import PauseIcon from '../assets/icons/pause.svg';
+import PlayIcon from '../assets/icons/play.svg';
+
+import { setFullPlayerOpen, setIsPlaying } from '../store/playerSlice';
+
+import type { GestureResponderEvent } from 'react-native';
+import type { RootState } from '../store';
+
+/** Renders the compact player controls for the currently active track. */
 export default function MiniPlayer() {
+  /** Provides the active theme for icon and progress-bar colors. */
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+  /** Dispatches player state changes to the Redux store. */
   const dispatch = useDispatch();
 
-  // 1. Читаємо поточний трек і статус відтворення з глобального сховища
+  /** Reads the active track and current playback state from the global store. */
   const { activeTrack, isPlaying } = useSelector(
     (state: RootState) => state.player,
   );
 
-  // Отримуємо дані про прогрес
+  /** Provides the current playback position and total track duration in seconds. */
   const { position, duration } = useProgress();
-  // Стан для збереження фізичної ширини смужки на екрані
+
+  /** Stores the measured width used to convert tap coordinates into seek positions. */
   const [barWidth, setBarWidth] = useState(0);
 
-  // 2. Якщо трек ще не вибрано (додаток щойно запущено) — плеєр взагалі не відображається
+  // Do not render player controls until a track has been selected.
   if (!activeTrack) {
     return null;
   }
 
-  // 3. Обробник для кнопки Play/Pause
+  /** Toggles native playback and synchronizes the local player state in Redux. */
   const togglePlayPause = async () => {
     if (isPlaying) {
       await TrackPlayer.pause();
     } else {
       await TrackPlayer.play();
     }
-    // Оновлюємо іконку в UI
     dispatch(setIsPlaying(!isPlaying));
   };
 
-  // Функція перемотування
+  /**
+   * Seeks to the position represented by a tap on the progress bar.
+   *
+   * @param event Press event containing the tap's horizontal coordinate.
+   */
   const handleSeek = async (event: GestureResponderEvent) => {
     if (duration === 0 || barWidth === 0) return;
-    
-    // 1. Отримуємо координату X, куди саме натиснув користувач (від 0 до ширини екрана)
+
+    // Convert the tap coordinate into a normalized position within the progress bar.
     const clickX = event.nativeEvent.locationX;
-    
-    // 2. Вираховуємо відсоток (наприклад, натиснули на середину = 0.5)
     const percentage = clickX / barWidth;
-    
-    // 3. Множимо загальну тривалість треку на відсоток і отримуємо цільову секунду
     const targetTime = duration * percentage;
-    
-    // 4. Наказуємо плеєру перемотати
+
     await TrackPlayer.seekTo(targetTime);
   };
 
-  // 4. Очищення URL для обкладинки (як ми робили в сітці)
+  // Normalize the artwork URL before passing it to the native image component.
   const cleanUri = activeTrack.coverUrl
     ? encodeURI(activeTrack.coverUrl.trim())
     : null;
 
-    // Вираховуємо відсоток прогресу (захист від ділення на нуль)
+  // Guard against division by zero before converting progress into a percentage.
   const progressPercentage = duration > 0 ? (position / duration) * 100 : 0;
 
   return (
@@ -69,7 +77,7 @@ export default function MiniPlayer() {
       onPress={() => dispatch(setFullPlayerOpen(true))}
       className="flex-row items-center bg-[#EAEAEA] dark:bg-[#282828] p-2 mx-2 mb-2 rounded-md overflow-hidden relative active:opacity-95 border border-[#D4D4D4] dark:border-transparent"
     >
-      {/* Обкладинка */}
+      {/* Track artwork, with a placeholder when no valid URL is available. */}
       {cleanUri ? (
         <Image
           source={{ uri: cleanUri }}
@@ -79,7 +87,7 @@ export default function MiniPlayer() {
         <View className="w-10 h-10 rounded-sm bg-gray-300 dark:bg-[#181818]" />
       )}
 
-      {/* Інформація про трек */}
+      {/* Track metadata displayed beside the artwork. */}
       <View className="flex-1 ml-3">
         <Text className="text-sm font-semibold text-black dark:text-white" numberOfLines={1}>
           {activeTrack.title}
@@ -89,7 +97,7 @@ export default function MiniPlayer() {
         </Text>
       </View>
 
-      {/* Кнопка Play/Pause */}
+      {/* Nested control toggles playback without opening the full player. */}
       <Pressable
         onPress={(event) => {
           event.stopPropagation();
@@ -104,21 +112,21 @@ export default function MiniPlayer() {
         )}
       </Pressable>
 
-      {/* КЛІКАБЕЛЬНА ЛІНІЯ ПРОГРЕСУ */}
-      <Pressable 
-        // onLayout спрацьовує при рендері і передає нам реальну ширину елемента
+      {/* Full-width progress target supports tap-to-seek interaction. */}
+      <Pressable
+        // Measure the rendered width so tap coordinates can be mapped to time.
         onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
         onPress={(event) => {
           event.stopPropagation();
           handleSeek(event).catch(console.error);
         }}
-        // Робимо зону натискання вищою (h-4 = 16px), але притискаємо контент до низу (justify-end)
+        // Keep the hit area taller than the visible bar while anchoring the bar at the bottom.
         className="absolute bottom-0 left-0 right-0 justify-end h-4"
       >
         <View className="h-[2px] bg-gray-300 dark:bg-[#404040] w-full relative">
-          <View 
-            className="absolute top-0 left-0 h-full bg-black dark:bg-white" 
-            style={{ width: `${progressPercentage}%` }} 
+          <View
+            className="absolute top-0 left-0 h-full bg-black dark:bg-white"
+            style={{ width: `${progressPercentage}%` }}
           />
         </View>
       </Pressable>

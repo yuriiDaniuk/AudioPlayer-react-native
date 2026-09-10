@@ -1,29 +1,28 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
-import BottomSheet from '@gorhom/bottom-sheet';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store';
-import { setFullPlayerOpen, setIsPlaying } from '../store/playerSlice';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 
-// Імпортуємо TrackPlayer та useProgress для слайдера
-import TrackPlayer, { useProgress } from 'react-native-track-player';
+import axios from 'axios';
+import BottomSheet from '@gorhom/bottom-sheet';
+import { useColorScheme } from 'nativewind';
+import Slider from '@react-native-community/slider';
+import { useTranslation } from 'react-i18next';
+import { showMessage } from 'react-native-flash-message';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import Slider from '@react-native-community/slider';
+import TrackPlayer, { useProgress } from 'react-native-track-player';
+import { useDispatch, useSelector } from 'react-redux';
 
-// Імпортуємо наші SVG іконки
-import PlayIcon from '../assets/icons/play.svg';
 import PauseIcon from '../assets/icons/pause.svg';
+import PlayIcon from '../assets/icons/play.svg';
 import SkipBackIcon from '../assets/icons/skip-back.svg';
 import SkipForwardIcon from '../assets/icons/skip-forward.svg';
 
-import { showMessage } from 'react-native-flash-message';
-import axios from 'axios';
-import { useTranslation } from 'react-i18next';
-import { useColorScheme } from 'nativewind';
+import { setFullPlayerOpen, setIsPlaying } from '../store/playerSlice';
+
+import type { RootState } from '../store';
 
 const { width } = Dimensions.get('window');
 const ARTWORK_SIZE = width * 0.85;
@@ -32,23 +31,36 @@ const styles = StyleSheet.create({
   background: { backgroundColor: '#121212' },
 });
 
+/** Renders the expanded player sheet with playback, seeking, and playlist controls. */
 export default function PlayerBottomSheet() {
+  /** Resolves localized player labels and alert messages. */
   const { t } = useTranslation();
+
+  /** Provides the active theme for sheet, artwork, and control colors. */
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
+
+  /** Maintains the imperative reference used to open and close the bottom sheet. */
   const bottomSheetRef = useRef<BottomSheet>(null);
+
+  /** Dispatches player state changes to the Redux store. */
   const dispatch = useDispatch();
 
+  /** Reads sheet visibility, track metadata, and playback state from global state. */
   const { isFullPlayerOpen, activeTrack, isPlaying } = useSelector(
     (state: RootState) => state.player,
   );
 
-  // Дістаємо поточний час пісні для слайдера
+  /** Provides the current playback position and duration for the slider. */
   const { position, duration } = useProgress();
 
+  /** Keeps the sheet at a full-screen snap point. */
   const snapPoints = useMemo(() => ['100%'], []);
+
+  /** Animated artwork scale used to reflect the current playback state. */
   const scale = useSharedValue(isPlaying ? 1 : 0.9);
 
+  // Animate the artwork toward its playing or paused scale when playback changes.
   useEffect(() => {
     scale.value = withSpring(isPlaying ? 1 : 0.9, {
       damping: 15,
@@ -56,10 +68,12 @@ export default function PlayerBottomSheet() {
     });
   }, [isPlaying, scale]);
 
+  /** Maps the shared scale value to the artwork transform style. */
   const animatedImageStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  // Keep the imperative sheet position synchronized with Redux visibility state.
   useEffect(() => {
     if (isFullPlayerOpen) {
       bottomSheetRef.current?.snapToIndex(0);
@@ -68,6 +82,7 @@ export default function PlayerBottomSheet() {
     }
   }, [isFullPlayerOpen]);
 
+  /** Toggles native playback and updates the corresponding Redux state. */
   const togglePlayPause = async () => {
     if (isPlaying) {
       await TrackPlayer.pause();
@@ -77,12 +92,17 @@ export default function PlayerBottomSheet() {
     dispatch(setIsPlaying(!isPlaying));
   };
 
+  /**
+   * Adds the active track to the server-side playlist and displays the result.
+   *
+   * The handler exits when no track is selected and maps server failures to a
+   * localized fallback message when the response does not contain an error.
+   */
   const handleAddToPlaylist = async () => {
-    // Перевіряємо, чи є взагалі активний трек
+    // A playlist request cannot be completed without an active track identifier.
     if (!activeTrack) return;
 
     try {
-      // Axios сам налаштовує заголовки і парсить JSON
       const response = await axios.post(
         'http://localhost:3000/api/playlist/add',
         {
@@ -90,7 +110,6 @@ export default function PlayerBottomSheet() {
         },
       );
 
-      // Якщо помилок немає, показуємо сповіщення
       if (response.data.success) {
         showMessage({
           message: t('alerts.success'),
@@ -100,7 +119,7 @@ export default function PlayerBottomSheet() {
         });
       }
     } catch (error: any) {
-      // Axios ховає відповідь сервера з помилкою в error.response.data
+      // Prefer the server-provided error and fall back to the localized message.
       const errorMessage =
         error.response?.data?.error || t('alerts.serverError');
 
@@ -117,7 +136,7 @@ export default function PlayerBottomSheet() {
     ? encodeURI(activeTrack.coverUrl.trim())
     : null;
 
-  // Функція для форматування секунд у вигляд 00:00
+  /** Converts a duration in seconds into a minutes-and-seconds display string. */
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -142,6 +161,7 @@ export default function PlayerBottomSheet() {
       }}
     >
       <View className="items-center flex-1 px-6 pt-10">
+        {/* Animated artwork for the active track. */}
         <Animated.Image
           source={{ uri: cleanUri || '' }}
           style={[
@@ -155,6 +175,7 @@ export default function PlayerBottomSheet() {
           ]}
         />
 
+        {/* Active track title and artist metadata. */}
         <View className="items-center w-full mt-10 mb-8">
           <Text
             className="mb-1 text-2xl font-bold text-black dark:text-white"
@@ -170,7 +191,7 @@ export default function PlayerBottomSheet() {
           </Text>
         </View>
 
-        {/* --- СЛАЙДЕР --- */}
+        {/* Playback progress slider and formatted elapsed/remaining times. */}
         <View className="w-full mt-4 mb-8">
           <Slider
             style={{ width: '100%', height: 40 }}
@@ -181,6 +202,7 @@ export default function PlayerBottomSheet() {
             maximumTrackTintColor={isDark ? '#404040' : '#D1D1D1'}
             thumbTintColor={isDark ? '#FFFFFF' : '#111111'}
             onSlidingComplete={async (value: number) => {
+              // Commit the seek only after the user releases the slider thumb.
               await TrackPlayer.seekTo(value);
             }}
           />
@@ -194,9 +216,9 @@ export default function PlayerBottomSheet() {
           </View>
         </View>
 
-        {/* --- КНОПКИ КЕРУВАННЯ --- */}
+        {/* Playback controls; skip buttons remain presentational placeholders. */}
         <View className="flex-row items-center justify-center w-full gap-10 mt-4">
-          {/* ЗАГЛУШКА: Кнопка Назад */}
+          {/* Placeholder for the previous-track action. */}
           <Pressable className="active:opacity-70">
             <SkipBackIcon
               width={36}
@@ -226,7 +248,7 @@ export default function PlayerBottomSheet() {
             )}
           </Pressable>
 
-          {/* ЗАГЛУШКА: Кнопка Далі */}
+          {/* Placeholder for the next-track action. */}
           <Pressable className="active:opacity-70">
             <SkipForwardIcon
               width={36}
@@ -235,6 +257,8 @@ export default function PlayerBottomSheet() {
             />
           </Pressable>
         </View>
+
+        {/* Adds the currently active track to the user's playlist. */}
         <View className="items-center justify-center w-full mt-4">
           <Pressable
             onPress={handleAddToPlaylist}
