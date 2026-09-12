@@ -80,10 +80,10 @@ export default function TrackGrid() {
         {cleanUri ? (
           <Image
             source={{ uri: cleanUri }}
-            className="w-full aspect-square rounded-md mb-1.5 bg-[#282828]"
+            className="w-full aspect-square rounded-md mb-1.5 bg-[#EAEAEA] dark:bg-[#282828]"
           />
         ) : (
-          <View className="w-full aspect-square bg-[#282828] rounded-md mb-1.5" />
+          <View className="w-full aspect-square bg-[#EAEAEA] dark:bg-[#282828] rounded-md mb-1.5" />
         )}
         <Text
           className="text-black dark:text-white text-[13px] font-semibold"

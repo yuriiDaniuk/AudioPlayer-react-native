@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Pressable, Text, View } from 'react-native';
 
 import axios from 'axios';
 import BottomSheet from '@gorhom/bottom-sheet';
@@ -26,10 +26,6 @@ import type { RootState } from '../store';
 
 const { width } = Dimensions.get('window');
 const ARTWORK_SIZE = width * 0.85;
-
-const styles = StyleSheet.create({
-  background: { backgroundColor: '#121212' },
-});
 
 /** Renders the expanded player sheet with playback, seeking, and playlist controls. */
 export default function PlayerBottomSheet() {
@@ -152,7 +148,6 @@ export default function PlayerBottomSheet() {
       enablePanDownToClose={true}
       onClose={() => dispatch(setFullPlayerOpen(false))}
       backgroundStyle={[
-        styles.background,
         { backgroundColor: isDark ? '#121212' : '#F5F5F5' },
       ]}
       handleIndicatorStyle={{
